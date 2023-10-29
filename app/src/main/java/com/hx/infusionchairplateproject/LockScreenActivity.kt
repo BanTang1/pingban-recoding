@@ -44,6 +44,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -68,14 +69,15 @@ class LockScreenActivity : BaseActivity() {
                 // Background
                 Image(painterResource(id = R.mipmap.llm3), contentDescription = "背景")
                 Row (modifier = Modifier.fillMaxSize()){
+
                     // left
                     Column(modifier = Modifier
                         .fillMaxHeight()
-                        .width(214.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(modifier = Modifier.height(116.dp))
+                        .weight(0.25f), horizontalAlignment = Alignment.CenterHorizontally) {
+//                        Spacer(modifier = Modifier.height(116.dp))
                         // 二维码
                         TwoDimensionalCode()
-                        Spacer(modifier = Modifier.height(116.dp))
+//                        Spacer(modifier = Modifier.height(116.dp))
                         // 套餐信息
                         Column(modifier = Modifier
                             .height(180.dp)
@@ -83,15 +85,17 @@ class LockScreenActivity : BaseActivity() {
                             PriceInformation()
                         }
                     }
+
                     // right banner
-                    Box(modifier = Modifier.fillMaxSize()){
+                    Box(modifier = Modifier.weight(1f)){
                         Banner()
                     }
                 }
             }
         }
 
-        snAddress = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+//        snAddress = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        snAddress = "7726c6b1e1963a52"
         if (debug) Log.d(TAG, "onCreate: snAddress = $snAddress")
     }
 
@@ -106,21 +110,31 @@ class LockScreenActivity : BaseActivity() {
         val viewModel:LockViewModel = viewModel()
         val priceInformationList by viewModel.priceInformation.collectAsState()
         if (priceInformationList.isEmpty()) return
-        var priceTime = ""
+        var type = ""
         for (i in 0 until priceInformationList.size) {
             Spacer(modifier = Modifier.height(8.dp))
-//            when (i) {
-//                0 -> {
-//                    priceTime = priceInformationList[i]
-//                }
-//                1 -> {}
-//                2 -> {}
-//            }
+            when (i) {
+                0 -> {
+                    type = "沉浸减压 "
+                }
+                1 -> {
+                    type = "萌娃专享 "
+                }
+                2 -> {
+                    type = "新游速递 "
+                }
+                3 -> {
+                    type = "活力畅影 "
+                }
+                4 -> {
+                    type = "快乐加倍 "
+                }
+            }
             Row{
                 Icon(imageVector = Icons.Filled.Favorite,
                     contentDescription = null,
                     tint = Color.Red)
-                Text(text = priceInformationList[i],fontWeight = FontWeight.Bold)
+                Text(text = type + priceInformationList[i],fontWeight = FontWeight.Bold, maxLines = 1)
             }
         }
     }
