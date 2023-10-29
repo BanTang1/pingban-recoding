@@ -1,0 +1,212 @@
+package com.hx.infusionchairplateproject
+
+
+import android.os.Bundle
+import android.provider.Settings
+import android.util.Log
+import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.Icon
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import coil.size.Scale
+import com.hx.infusionchairplateproject.viewmodel.LockViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+
+class LockScreenActivity : BaseActivity() {
+
+    private val TAG:String = "liudehua-LockScreenActivity"
+    private val debug:Boolean = true
+    private val lockViewModel:LockViewModel by viewModels()
+    private lateinit var snAddress:String
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setContent {
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Background
+                Image(painterResource(id = R.mipmap.llm3), contentDescription = "背景")
+                Row (modifier = Modifier.fillMaxSize()){
+                    // left
+                    Column(modifier = Modifier
+                        .fillMaxHeight()
+                        .width(214.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(modifier = Modifier.height(116.dp))
+                        // 二维码
+                        TwoDimensionalCode()
+                        Spacer(modifier = Modifier.height(116.dp))
+                        // 套餐信息
+                        Column(modifier = Modifier
+                            .height(180.dp)
+                            .width(180.dp)) {
+                            PriceInformation()
+                        }
+                    }
+                    // right banner
+                    Box(modifier = Modifier.fillMaxSize()){
+                        Banner()
+                    }
+                }
+            }
+        }
+
+        snAddress = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        if (debug) Log.d(TAG, "onCreate: snAddress = $snAddress")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        lockViewModel.updateInfo(snAddress)
+    }
+
+
+    @Composable
+    fun PriceInformation(){
+        val viewModel:LockViewModel = viewModel()
+        val priceInformationList by viewModel.priceInformation.collectAsState()
+        if (priceInformationList.isEmpty()) return
+        var priceTime = ""
+        for (i in 0 until priceInformationList.size) {
+            Spacer(modifier = Modifier.height(8.dp))
+//            when (i) {
+//                0 -> {
+//                    priceTime = priceInformationList[i]
+//                }
+//                1 -> {}
+//                2 -> {}
+//            }
+            Row{
+                Icon(imageVector = Icons.Filled.Favorite,
+                    contentDescription = null,
+                    tint = Color.Red)
+                Text(text = priceInformationList[i],fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+
+    @OptIn(ExperimentalFoundationApi::class)
+    @Composable
+    fun Banner(){
+        val viewModel: LockViewModel = viewModel()
+        val imageList by viewModel.imageList.collectAsState()
+        if (imageList.isEmpty()) return
+        val pagerState = rememberPagerState()
+        val isDragged = pagerState.interactionSource.collectIsDraggedAsState()
+        val scope = rememberCoroutineScope()
+        LaunchedEffect(pagerState.settledPage) {
+            delay(3000)
+            val scoller =
+                if (pagerState.currentPage + 1 == imageList.size) 0 else pagerState.currentPage + 1
+            pagerState.animateScrollToPage(scoller)
+        }
+
+        Box {
+            HorizontalPager(
+                state = pagerState,
+                pageCount = imageList.size,
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                val imageScale by animateFloatAsState(
+                    targetValue = if (pagerState.currentPage == it) 1f else 0.8f,
+                    animationSpec = tween(500), label = "动画"
+                )
+                AsyncImage(
+                    model = ImageRequest
+                        .Builder(LocalContext.current)
+                        .data(imageList[it])
+                        .scale(Scale.FILL)
+                        .error(R.mipmap.shibai)
+                        .build(),
+                    contentDescription = "图片$it",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .scale(imageScale),
+                    contentScale = ContentScale.FillBounds
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 5.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                imageList.indices.forEach { index ->
+                    RadioButton(selected = pagerState.currentPage == index, onClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
+                    })
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun TwoDimensionalCode(){
+        val viewModel: LockViewModel = viewModel()
+        val qrCodeBitmap by viewModel.qrCodeBitmap.collectAsState()
+        AsyncImage(
+            model = ImageRequest
+                .Builder(LocalContext.current)
+                .data(qrCodeBitmap)
+                .scale(Scale.FILL)
+                .error(R.mipmap.shibai)
+                .build(),
+            contentDescription = "二维码",
+            modifier = Modifier.height(100.dp).width(100.dp),
+            contentScale = ContentScale.FillBounds
+        )
+    }
+
+
+}
+
+
+@Preview(showBackground = true, widthDp = 1920, heightDp = 1104)
+@Composable
+fun show(){
+
+}

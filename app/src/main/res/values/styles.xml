@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+
+    <style name="AppThemeBase" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- 设置状态栏全透明透明 -->
+        <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
+        <!--设置d导航栏全透明透明   -->
+        <item name="android:navigationBarColor" tools:targetApi="l">@android:color/transparent</item>
+    </style>
+
+<!--    LauncherActivity全屏主题-->
+    <style name="FullScreen" parent="@style/Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+    </style>
+
+
+</resources>
