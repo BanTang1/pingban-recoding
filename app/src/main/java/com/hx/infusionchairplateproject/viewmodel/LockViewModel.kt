@@ -4,7 +4,13 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.hx.infusionchairplateproject.databeen.ScreenInfo
 import com.hx.infusionchairplateproject.network.NetRequestManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -15,7 +21,10 @@ import retrofit2.Response
 class LockViewModel : ViewModel() {
 
     private val TAG:String = "liudehua-LockViewModel"
-    private val debug:Boolean = true
+    private val debug:Boolean = false
+    private val viewModelJob = Job()
+    private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
+    private var isLoadSuccess:Boolean = false
     private val netManager: NetRequestManager = NetRequestManager.getInstance()
 
     // 二维码
@@ -31,6 +40,17 @@ class LockViewModel : ViewModel() {
     val imageList = _imageList
 
     fun updateInfo(sn: String) {
+        uiScope.launch {
+            while (!isLoadSuccess){
+                withContext(Dispatchers.IO) {
+                    realUpdateInfo(sn)
+                    delay(2000L)
+                }
+            }
+        }
+    }
+
+    private  fun realUpdateInfo(sn: String) {
         val screenInfo: Call<ScreenInfo> = netManager.requestApi.getScreenInfo(sn)
         screenInfo.enqueue(object : Callback<ScreenInfo> {
             override fun onResponse(call: Call<ScreenInfo>, response: Response<ScreenInfo>) {
@@ -53,6 +73,9 @@ class LockViewModel : ViewModel() {
                     if (debug) Log.d(TAG, "onResponse: 响应数据中的 status(code) ！= 200")
                     return
                 }
+
+                // 标志 ：网络请求成功
+                isLoadSuccess = true
 
                 // 套餐信息
                 val feePackages : MutableList<ScreenInfo.DataDataBeen.FeePackagesDataBeen> =screenInfo.data.feePackages
@@ -88,9 +111,15 @@ class LockViewModel : ViewModel() {
             }
 
             override fun onFailure(call: Call<ScreenInfo>, t: Throwable) {
-                Log.d(TAG, "onFailure: t = $t")
+                if (debug) Log.d(TAG, "onFailure: t = $t")
+                isLoadSuccess = false
             }
 
         })
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelJob.cancel()
     }
 }

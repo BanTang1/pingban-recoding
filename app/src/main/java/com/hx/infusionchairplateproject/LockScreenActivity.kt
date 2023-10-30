@@ -34,6 +34,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,7 +47,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -58,7 +59,7 @@ import kotlinx.coroutines.launch
 class LockScreenActivity : BaseActivity() {
 
     private val TAG:String = "liudehua-LockScreenActivity"
-    private val debug:Boolean = true
+    private val debug:Boolean = false
     private val lockViewModel:LockViewModel by viewModels()
     private lateinit var snAddress:String
 
@@ -98,8 +99,8 @@ class LockScreenActivity : BaseActivity() {
         if (debug) Log.d(TAG, "onCreate: snAddress = $snAddress")
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun onStart() {
+        super.onStart()
         lockViewModel.updateInfo(snAddress)
     }
 
@@ -141,7 +142,9 @@ class LockScreenActivity : BaseActivity() {
                 }
             }
             Row{
-                Icon(painter = painterResource(id = id),modifier = Modifier.width(20.dp).height(20.dp),contentDescription = "套餐图标-$i",
+                Icon(painter = painterResource(id = id),modifier = Modifier
+                    .width(20.dp)
+                    .height(20.dp),contentDescription = "套餐图标-$i",
                     tint = Color.Unspecified)
                 Text(text = type + priceInformationList[i],fontWeight = FontWeight.Bold, maxLines = 1)
             }
@@ -175,12 +178,23 @@ class LockScreenActivity : BaseActivity() {
                     targetValue = if (pagerState.currentPage == it) 1f else 0.8f,
                     animationSpec = tween(500), label = "动画"
                 )
+
+                val retryCount = remember { mutableStateOf(0) }
+                val maxRetries = 3      // reconnect count
+
                 AsyncImage(
                     model = ImageRequest
                         .Builder(LocalContext.current)
                         .data(imageList[it])
                         .scale(Scale.FILL)
                         .error(R.mipmap.shibai)
+                        .listener(
+                            onError = { _, _->
+                                if (retryCount.value < maxRetries) {
+                                    retryCount.value++
+                                }
+                            }
+                        )
                         .build(),
                     contentDescription = "图片$it",
                     modifier = Modifier
@@ -211,12 +225,23 @@ class LockScreenActivity : BaseActivity() {
     fun TwoDimensionalCode(){
         val viewModel: LockViewModel = viewModel()
         val qrCodeBitmap by viewModel.qrCodeBitmap.collectAsState()
+        if(qrCodeBitmap == "") { return }
+
+        val retryCount = remember { mutableStateOf(0) }
+        val maxRetries = 3      // reconnect count
+
         AsyncImage(
             model = ImageRequest
                 .Builder(LocalContext.current)
                 .data(qrCodeBitmap)
                 .scale(Scale.FILL)
                 .error(R.mipmap.shibai)
+                .listener(
+                    onError = { _, _->
+                        if (retryCount.value < maxRetries) {
+                            retryCount.value++
+                        }
+                    })
                 .build(),
             contentDescription = "二维码",
             modifier = Modifier
