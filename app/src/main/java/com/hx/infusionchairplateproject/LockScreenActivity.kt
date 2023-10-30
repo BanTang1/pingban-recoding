@@ -2,11 +2,9 @@ package com.hx.infusionchairplateproject
 
 
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -25,8 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -47,6 +43,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -89,6 +86,9 @@ class LockScreenActivity : BaseActivity() {
                     // right banner
                     Box(modifier = Modifier.weight(1f)){
                         Banner()
+                        Column(modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 50.dp, end = 30.dp)) {
+                            ShowPromptMessage()
+                        }
                     }
                 }
             }
@@ -97,14 +97,33 @@ class LockScreenActivity : BaseActivity() {
 //        snAddress = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
         snAddress = "7726c6b1e1963a52"
         if (debug) Log.d(TAG, "onCreate: snAddress = $snAddress")
+
+
+        lockViewModel.apply {
+            updateInfo(snAddress)
+            updatePromptMessage(this@LockScreenActivity)
+            updateNetState(this@LockScreenActivity)
+        }
+
     }
 
-    override fun onStart() {
-        super.onStart()
-        lockViewModel.updateInfo(snAddress)
+
+
+    @Composable
+    fun ShowPromptMessage(){
+        val viewModel:LockViewModel = viewModel()
+        val version by viewModel.version.collectAsState()
+        val netState by viewModel.netState.collectAsState()
+
+        Text(text = "温馨提示",fontWeight = FontWeight.Bold, fontSize = 17.sp)
+        Text(text = "本机维护时间凌晨4~7点",fontWeight = FontWeight.Bold,fontSize = 17.sp)
+        Text(text = "维护期间机器暂停使用",fontWeight = FontWeight.Bold,fontSize = 17.sp)
+        Text(text = "网络状态: ${if (netState) "网络正常" else "网络异常"}",
+            fontWeight = FontWeight.Bold, fontSize = 17.sp,
+            color = if (netState) Color.White else Color.Red)
+        Text(text = "版本号: $version",fontWeight = FontWeight.Bold, fontSize = 17.sp)
     }
-
-
+    
     @Composable
     fun PriceInformation(){
         val viewModel:LockViewModel = viewModel()

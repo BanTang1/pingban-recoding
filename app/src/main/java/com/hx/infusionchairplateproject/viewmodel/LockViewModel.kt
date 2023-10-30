@@ -1,9 +1,14 @@
 package com.hx.infusionchairplateproject.viewmodel
 
+import android.content.Context
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.google.common.reflect.Reflection.getPackageName
 import com.hx.infusionchairplateproject.databeen.ScreenInfo
 import com.hx.infusionchairplateproject.network.NetRequestManager
+import com.hx.infusionchairplateproject.tools.GeneralUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -39,11 +44,40 @@ class LockViewModel : ViewModel() {
     private var _imageList = MutableStateFlow(emptyList<String>())
     val imageList = _imageList
 
+    // 版本号
+    private var _version = MutableStateFlow("")
+    val version = _version
+
+    // 网络状态
+    private var _netState = MutableStateFlow(false)
+    val netState = _netState
+
     fun updateInfo(sn: String) {
         uiScope.launch {
             while (!isLoadSuccess){
                 withContext(Dispatchers.IO) {
                     realUpdateInfo(sn)
+                    delay(2000L)
+                }
+            }
+        }
+    }
+
+    fun updatePromptMessage(context:Context){
+        try {
+            val packageInfo: PackageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            val versionName = packageInfo.versionName
+            _version.value = versionName
+        } catch (e: PackageManager.NameNotFoundException) {
+            _version.value = ""
+        }
+    }
+
+    fun updateNetState(context: Context){
+        uiScope.launch {
+            while (true){
+                withContext(Dispatchers.IO) {
+                    _netState.value = (GeneralUtil.isNetWorkConnected(context))
                     delay(2000L)
                 }
             }
