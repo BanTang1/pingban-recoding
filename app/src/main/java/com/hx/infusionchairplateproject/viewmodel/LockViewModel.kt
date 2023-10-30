@@ -60,6 +60,7 @@ class LockViewModel : ViewModel() {
                     if (debug) Log.d(TAG, "onResponse: 套餐信息为空")
                     return
                 }
+                _priceInformation.value = emptyList()
                 for (i in 0 until feePackages.size) {
                     val feePackagesDataBeen:  ScreenInfo.DataDataBeen.FeePackagesDataBeen = feePackages[i]
                     if ("TABLET" != feePackagesDataBeen.type) {

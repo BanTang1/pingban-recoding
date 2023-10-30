@@ -6,6 +6,7 @@ import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -73,15 +74,13 @@ class LockScreenActivity : BaseActivity() {
                     // left
                     Column(modifier = Modifier
                         .fillMaxHeight()
-                        .weight(0.25f), horizontalAlignment = Alignment.CenterHorizontally) {
-//                        Spacer(modifier = Modifier.height(116.dp))
+                        .width(214.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(modifier = Modifier.height(114.dp))
                         // 二维码
                         TwoDimensionalCode()
-//                        Spacer(modifier = Modifier.height(116.dp))
+                        Spacer(modifier = Modifier.height(100.dp))
                         // 套餐信息
-                        Column(modifier = Modifier
-                            .height(180.dp)
-                            .width(180.dp)) {
+                        Column(modifier = Modifier.weight(1f)) {
                             PriceInformation()
                         }
                     }
@@ -110,30 +109,40 @@ class LockScreenActivity : BaseActivity() {
         val viewModel:LockViewModel = viewModel()
         val priceInformationList by viewModel.priceInformation.collectAsState()
         if (priceInformationList.isEmpty()) return
-        var type = ""
+        if (priceInformationList.size > 5) return
+        var type:String
+        var id: Int
         for (i in 0 until priceInformationList.size) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             when (i) {
                 0 -> {
                     type = "沉浸减压 "
+                    id = R.drawable.llm_cjjy_icon
                 }
                 1 -> {
                     type = "萌娃专享 "
+                    id = R.drawable.llm_mwzx_icon
                 }
                 2 -> {
                     type = "新游速递 "
+                    id = R.drawable.llm_xysd_icon
                 }
                 3 -> {
                     type = "活力畅影 "
+                    id = R.drawable.llm_hlcy_icon
                 }
                 4 -> {
                     type = "快乐加倍 "
+                    id = R.drawable.llm_kljb_icon
+                }
+                else -> {
+                    type = "沉浸减压 "
+                    id = R.drawable.llm_cjjy_icon
                 }
             }
             Row{
-                Icon(imageVector = Icons.Filled.Favorite,
-                    contentDescription = null,
-                    tint = Color.Red)
+                Icon(painter = painterResource(id = id),modifier = Modifier.width(20.dp).height(20.dp),contentDescription = "套餐图标-$i",
+                    tint = Color.Unspecified)
                 Text(text = type + priceInformationList[i],fontWeight = FontWeight.Bold, maxLines = 1)
             }
         }
@@ -210,7 +219,9 @@ class LockScreenActivity : BaseActivity() {
                 .error(R.mipmap.shibai)
                 .build(),
             contentDescription = "二维码",
-            modifier = Modifier.height(100.dp).width(100.dp),
+            modifier = Modifier
+                .height(100.dp)
+                .width(100.dp),
             contentScale = ContentScale.FillBounds
         )
     }

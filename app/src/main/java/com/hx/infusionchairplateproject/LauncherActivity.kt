@@ -8,12 +8,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
-import android.util.Log
-import android.view.KeyEvent
-import android.view.View
-import android.view.WindowManager
 import android.widget.ImageView
-import androidx.appcompat.app.AppCompatActivity
 import com.hx.infusionchairplateproject.tools.GeneralUtil
 
 /**
