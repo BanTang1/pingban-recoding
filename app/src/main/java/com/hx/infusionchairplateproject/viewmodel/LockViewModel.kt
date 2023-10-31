@@ -5,7 +5,7 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.google.common.reflect.Reflection.getPackageName
+import com.hx.infusionchairplateproject.databeen.BaseBean
 import com.hx.infusionchairplateproject.databeen.ScreenInfo
 import com.hx.infusionchairplateproject.network.NetRequestManager
 import com.hx.infusionchairplateproject.tools.GeneralUtil
@@ -26,10 +26,11 @@ import retrofit2.Response
 class LockViewModel : ViewModel() {
 
     private val TAG:String = "liudehua-LockViewModel"
-    private val debug:Boolean = false
+    private val debug:Boolean = true
     private val viewModelJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
-    private var isLoadSuccess:Boolean = false
+    private var isScreenLoadSuccess:Boolean = false
+    private var isPutInSuccess:Boolean = false
     private val netManager: NetRequestManager = NetRequestManager.getInstance()
 
     // 二维码
@@ -52,11 +53,26 @@ class LockViewModel : ViewModel() {
     private var _netState = MutableStateFlow(false)
     val netState = _netState
 
+    // 投放状态
+    private var _putInState = MutableStateFlow(true)
+    val putInState = _putInState
+
     fun updateInfo(sn: String) {
         uiScope.launch {
-            while (!isLoadSuccess){
+            while (!isScreenLoadSuccess){
                 withContext(Dispatchers.IO) {
                     realUpdateInfo(sn)
+                    delay(2000L)
+                }
+            }
+        }
+    }
+
+    fun updatePutInState(sn:String) {
+        uiScope.launch {
+            while (!isScreenLoadSuccess){
+                withContext(Dispatchers.IO) {
+                    realUpdatePutInState(sn)
                     delay(2000L)
                 }
             }
@@ -108,8 +124,8 @@ class LockViewModel : ViewModel() {
                     return
                 }
 
-                // 标志 ：网络请求成功
-                isLoadSuccess = true
+                // 标志 ：锁屏数据请求成功
+                isScreenLoadSuccess = true
 
                 // 套餐信息
                 val feePackages : MutableList<ScreenInfo.DataDataBeen.FeePackagesDataBeen> =screenInfo.data.feePackages
@@ -146,7 +162,47 @@ class LockViewModel : ViewModel() {
 
             override fun onFailure(call: Call<ScreenInfo>, t: Throwable) {
                 if (debug) Log.d(TAG, "onFailure: t = $t")
-                isLoadSuccess = false
+                isScreenLoadSuccess = false
+            }
+
+        })
+    }
+
+    private fun realUpdatePutInState(sn: String) {
+        val deviceStatus: Call<BaseBean<String>> = netManager.requestApi.getDeviceStatus(sn)
+        deviceStatus.enqueue(object : Callback<BaseBean<String>> {
+            override fun onResponse(call: Call<BaseBean<String>>, response: Response<BaseBean<String>>) {
+                if (!response.isSuccessful) {
+                    if (debug) Log.d(TAG, "onResponse: 响应异常")
+                    return
+                }
+                if(response.code() != 200) {
+                    if (debug) Log.d(TAG, "onResponse: 响应码异常 Code = ${response.code()}")
+                    return
+                }
+
+                val deviceState = response.body()
+
+                if (deviceState == null) {
+                    if (debug) Log.d(TAG, "onResponse: 响应数据为空")
+                    return
+                }
+                if (deviceState.status != 200) {
+                    if (debug) Log.d(TAG, "onResponse: 响应数据中的 status(code) ！= 200")
+                    return
+                }
+
+                // 标志 ： 获取设备是否投放信息成功
+                isPutInSuccess = true
+
+                // 投放状态
+                _putInState.value = deviceState.data.equals("PUT_ON")
+
+            }
+
+            override fun onFailure(call: Call<BaseBean<String>>, t: Throwable) {
+                if (debug) Log.d(TAG, "onFailure: t = $t")
+                isPutInSuccess = false
             }
 
         })

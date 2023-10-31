@@ -51,6 +51,7 @@ import coil.size.Scale
 import com.hx.infusionchairplateproject.viewmodel.LockViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import android.provider.Settings
 
 
 class LockScreenActivity : BaseActivity() {
@@ -84,18 +85,35 @@ class LockScreenActivity : BaseActivity() {
                     }
 
                     // right banner
-                    Box(modifier = Modifier.weight(1f)){
+                    Box(modifier = Modifier.fillMaxSize()){
                         Banner()
-                        Column(modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 50.dp, end = 30.dp)) {
+                        Column(modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(bottom = 50.dp, end = 30.dp)) {
                             ShowPromptMessage()
+                        }
+
+                        Column(modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(bottom = 50.dp, end = 220.dp)) {
+                            Image(
+                                painterResource(id = R.mipmap.xiongmao),
+                                contentDescription = "熊猫LOGO",
+                                modifier = Modifier
+                                    .width(100.dp)
+                                    .height(100.dp)
+                            )
                         }
                     }
                 }
+
+                // 设备投放状态
+                checkDeviceState()
             }
         }
 
-//        snAddress = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-        snAddress = "7726c6b1e1963a52"
+        snAddress = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+//        snAddress = "7726c6b1e1963a52"
         if (debug) Log.d(TAG, "onCreate: snAddress = $snAddress")
 
 
@@ -103,10 +121,21 @@ class LockScreenActivity : BaseActivity() {
             updateInfo(snAddress)
             updatePromptMessage(this@LockScreenActivity)
             updateNetState(this@LockScreenActivity)
+            updatePutInState(snAddress)
         }
 
     }
 
+    @Composable
+    private fun checkDeviceState() {
+        val putInState by lockViewModel.putInState.collectAsState()
+
+        if (!putInState) {
+            Box{
+                Image(painterResource(id = R.mipmap.llm_device_id), contentDescription = "投放页背景")
+            }
+        }
+    }
 
 
     @Composable
@@ -120,7 +149,7 @@ class LockScreenActivity : BaseActivity() {
         Text(text = "维护期间机器暂停使用",fontWeight = FontWeight.Bold,fontSize = 17.sp)
         Text(text = "网络状态: ${if (netState) "网络正常" else "网络异常"}",
             fontWeight = FontWeight.Bold, fontSize = 17.sp,
-            color = if (netState) Color.White else Color.Red)
+            color = if (netState) Color.Black else Color.Red)
         Text(text = "版本号: $version",fontWeight = FontWeight.Bold, fontSize = 17.sp)
     }
     
@@ -128,7 +157,6 @@ class LockScreenActivity : BaseActivity() {
     fun PriceInformation(){
         val viewModel:LockViewModel = viewModel()
         val priceInformationList by viewModel.priceInformation.collectAsState()
-        if (priceInformationList.isEmpty()) return
         if (priceInformationList.size > 5) return
         var type:String
         var id: Int
@@ -175,15 +203,17 @@ class LockScreenActivity : BaseActivity() {
     fun Banner(){
         val viewModel: LockViewModel = viewModel()
         val imageList by viewModel.imageList.collectAsState()
-        if (imageList.isEmpty()) return
         val pagerState = rememberPagerState()
         val isDragged = pagerState.interactionSource.collectIsDraggedAsState()
         val scope = rememberCoroutineScope()
+
         LaunchedEffect(pagerState.settledPage) {
             delay(3000)
-            val scoller =
-                if (pagerState.currentPage + 1 == imageList.size) 0 else pagerState.currentPage + 1
-            pagerState.animateScrollToPage(scoller)
+            if (imageList.isNotEmpty()) {
+                val scoller =
+                    if (pagerState.currentPage + 1 == imageList.size) 0 else pagerState.currentPage + 1
+                pagerState.animateScrollToPage(scoller)
+            }
         }
 
         Box {
@@ -206,6 +236,7 @@ class LockScreenActivity : BaseActivity() {
                         .Builder(LocalContext.current)
                         .data(imageList[it])
                         .scale(Scale.FILL)
+                        .placeholder(R.mipmap.shibai)
                         .error(R.mipmap.shibai)
                         .listener(
                             onError = { _, _->
@@ -244,37 +275,38 @@ class LockScreenActivity : BaseActivity() {
     fun TwoDimensionalCode(){
         val viewModel: LockViewModel = viewModel()
         val qrCodeBitmap by viewModel.qrCodeBitmap.collectAsState()
-        if(qrCodeBitmap == "") { return }
-
         val retryCount = remember { mutableStateOf(0) }
         val maxRetries = 3      // reconnect count
 
-        AsyncImage(
-            model = ImageRequest
-                .Builder(LocalContext.current)
-                .data(qrCodeBitmap)
-                .scale(Scale.FILL)
-                .error(R.mipmap.shibai)
-                .listener(
-                    onError = { _, _->
-                        if (retryCount.value < maxRetries) {
-                            retryCount.value++
-                        }
-                    })
-                .build(),
-            contentDescription = "二维码",
-            modifier = Modifier
-                .height(100.dp)
-                .width(100.dp),
-            contentScale = ContentScale.FillBounds
-        )
+        if (qrCodeBitmap != "") {
+            AsyncImage(
+                model = ImageRequest
+                    .Builder(LocalContext.current)
+                    .data(qrCodeBitmap)
+                    .scale(Scale.FILL)
+                    .placeholder(R.mipmap.shibai)
+                    .error(R.mipmap.shibai)
+                    .listener(
+                        onError = { _, _->
+                            if (retryCount.value < maxRetries) {
+                                retryCount.value++
+                            }
+                        })
+                    .build(),
+                contentDescription = "二维码",
+                modifier = Modifier
+                    .height(100.dp)
+                    .width(100.dp),
+                contentScale = ContentScale.FillBounds
+            )
+        }
     }
 
 
 }
 
 
-@Preview(showBackground = true, widthDp = 1920, heightDp = 1104)
+@Preview(showBackground = true, widthDp = 1920, heightDp = 1200)
 @Composable
 fun show(){
 
