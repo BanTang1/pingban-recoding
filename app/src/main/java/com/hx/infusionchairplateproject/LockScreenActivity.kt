@@ -1,6 +1,7 @@
 package com.hx.infusionchairplateproject
 
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
@@ -52,6 +53,10 @@ import com.hx.infusionchairplateproject.viewmodel.LockViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import android.provider.Settings
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import com.hx.infusionchairplateproject.tools.GeneralUtil
 
 
 class LockScreenActivity : BaseActivity() {
@@ -61,6 +66,7 @@ class LockScreenActivity : BaseActivity() {
     private val lockViewModel:LockViewModel by viewModels()
     private lateinit var snAddress:String
 
+    @SuppressLint("HardwareIds")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -129,10 +135,11 @@ class LockScreenActivity : BaseActivity() {
     @Composable
     private fun checkDeviceState() {
         val putInState by lockViewModel.putInState.collectAsState()
-
+        val bitmap = GeneralUtil.getTwoDimensionalMap(snAddress, LocalContext.current).asImageBitmap()
         if (!putInState) {
             Box{
                 Image(painterResource(id = R.mipmap.llm_device_id), contentDescription = "投放页背景")
+                Image(bitmap = bitmap, contentDescription = "投放二维码", modifier = Modifier.align(Alignment.TopCenter).offset(30.dp, 80.dp))
             }
         }
     }

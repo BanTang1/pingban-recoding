@@ -7,7 +7,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.hx.infusionchairplateproject.databeen.BaseBean
 import com.hx.infusionchairplateproject.databeen.ScreenInfo
-import com.hx.infusionchairplateproject.network.NetRequestManager
+import com.hx.infusionchairplateproject.network.NetworkManager
 import com.hx.infusionchairplateproject.tools.GeneralUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +31,7 @@ class LockViewModel : ViewModel() {
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
     private var isScreenLoadSuccess:Boolean = false
     private var isPutInSuccess:Boolean = false
-    private val netManager: NetRequestManager = NetRequestManager.getInstance()
+    private val netManager: NetworkManager = NetworkManager.getInstance()
 
     // 二维码
     private var _qrCodeBitmap = MutableStateFlow("")

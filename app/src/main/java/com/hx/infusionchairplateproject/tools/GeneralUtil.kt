@@ -1,7 +1,12 @@
 package com.hx.infusionchairplateproject.tools
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.net.ConnectivityManager
+import com.hx.infusionchairplateproject.R
+import com.yzq.zxinglibrary.encode.CodeCreator
 
 class GeneralUtil {
 
@@ -23,6 +28,19 @@ class GeneralUtil {
             }
             return false
         }
+
+        /**
+         * 根据设备 SN 码生成二维码图片
+         * 此处可设置 生成的二维码图片大小
+         */
+        @SuppressLint("UseCompatLoadingForDrawables")
+        fun getTwoDimensionalMap(sn: String, context: Context): Bitmap {
+            val drawable = context.resources.getDrawable(R.mipmap.llm_app_icon_playstore)
+            val bitmapDrawable = drawable as BitmapDrawable
+            val tmp = bitmapDrawable.bitmap
+            return CodeCreator.createQRCode(sn + "text=hx", 350, 350, tmp)
+        }
+
     }
 
 }
