@@ -21,7 +21,7 @@ import retrofit2.Callback
 import retrofit2.Response
 
 /**
- * 锁屏页数据
+ * 锁屏页数据模型
  */
 class LockViewModel : ViewModel() {
 
