@@ -144,13 +144,10 @@ class LockScreenActivity : BaseActivity() {
         var bitmap:ImageBitmap
         if (recvScanState == socketViewModel.SCAN_STATE_OK) {
             bitmap = ImageBitmap.imageResource(id = R.mipmap.scan_ok)
-            Log.i(TAG, "checkDeviceState: 11111111111")
         } else if (recvScanState == socketViewModel.SCAN_STATE_NO){
             bitmap = ImageBitmap.imageResource(id = R.mipmap.scan_no)
-            Log.i(TAG, "checkDeviceState: 2222222222222222")
         } else {
             bitmap = GeneralUtil.getTwoDimensionalMap(snAddress, LocalContext.current).asImageBitmap()
-            Log.i(TAG, "checkDeviceState: 333333333333333333")
         }
 
         if (!putInState) {
