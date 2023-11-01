@@ -16,8 +16,17 @@ public class NetworkManager {
     private RequestApi requestApi;
     private WebSocketClient webSocketClient;
 
+    /**
+     * 数据请求服务器
+     */
     private final String Retrofit_URL =  "http://shuyeyi.dev.hxyihu.com/server/";       // 正式服
 //    private final String Retrofit_URL =  "http://shuyeyi-test.dev.hxyihu.com/server/";  // 测试服
+
+    /**
+     * WebSocket 服务器
+     */
+    public static final String WEBSOCKET_URL = "ws://shuyeyi.dev.hxyihu.com/message";    // 正式服
+//    public static final String WEBSOCKET_URL = "ws://shuyeyi-test.dev.hxyihu.com/message";    // 测试服
 
     private NetworkManager() {
         if (retrofit == null) {
@@ -30,29 +39,6 @@ public class NetworkManager {
             requestApi = retrofit.create(RequestApi.class);
         }
 
-//        if (webSocketClient == null) {
-//            webSocketClient = new WebSocketClient() {
-//                @Override
-//                public void onOpen(ServerHandshake handshakedata) {
-//
-//                }
-//
-//                @Override
-//                public void onMessage(String message) {
-//
-//                }
-//
-//                @Override
-//                public void onClose(int code, String reason, boolean remote) {
-//
-//                }
-//
-//                @Override
-//                public void onError(Exception ex) {
-//
-//                }
-//            }
-//        }
     }
 
     public static NetworkManager getInstance() {

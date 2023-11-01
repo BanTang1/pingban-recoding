@@ -105,22 +105,22 @@ class LockViewModel : ViewModel() {
         screenInfo.enqueue(object : Callback<ScreenInfo> {
             override fun onResponse(call: Call<ScreenInfo>, response: Response<ScreenInfo>) {
                 if (!response.isSuccessful) {
-                    if (debug) Log.d(TAG, "onResponse: 响应异常")
+                    if (debug) Log.d(TAG, "onResponse: 锁屏响应异常")
                     return
                 }
                 if(response.code() != 200) {
-                    if (debug) Log.d(TAG, "onResponse: 响应码异常 Code = ${response.code()}")
+                    if (debug) Log.d(TAG, "onResponse: 锁屏响应码异常 Code = ${response.code()}")
                     return
                 }
 
                 val screenInfo = response.body()
 
                 if (screenInfo == null) {
-                    if (debug) Log.d(TAG, "onResponse: 响应数据为空")
+                    if (debug) Log.d(TAG, "onResponse: 锁屏响应数据为空")
                     return
                 }
                 if (screenInfo.status != 200) {
-                    if (debug) Log.d(TAG, "onResponse: 响应数据中的 status(code) ！= 200")
+                    if (debug) Log.d(TAG, "onResponse: 锁屏响应数据中的 status(code) ！= 200")
                     return
                 }
 
@@ -173,22 +173,22 @@ class LockViewModel : ViewModel() {
         deviceStatus.enqueue(object : Callback<BaseBean<String>> {
             override fun onResponse(call: Call<BaseBean<String>>, response: Response<BaseBean<String>>) {
                 if (!response.isSuccessful) {
-                    if (debug) Log.d(TAG, "onResponse: 响应异常")
+                    if (debug) Log.d(TAG, "onResponse: 投放状态响应异常")
                     return
                 }
                 if(response.code() != 200) {
-                    if (debug) Log.d(TAG, "onResponse: 响应码异常 Code = ${response.code()}")
+                    if (debug) Log.d(TAG, "onResponse: 投放状态响应码异常 Code = ${response.code()}")
                     return
                 }
 
                 val deviceState = response.body()
 
                 if (deviceState == null) {
-                    if (debug) Log.d(TAG, "onResponse: 响应数据为空")
+                    if (debug) Log.d(TAG, "onResponse: 投放状态响应数据为空")
                     return
                 }
                 if (deviceState.status != 200) {
-                    if (debug) Log.d(TAG, "onResponse: 响应数据中的 status(code) ！= 200")
+                    if (debug) Log.d(TAG, "onResponse: 投放状态响应数据中的 status(code) ！= 200")
                     return
                 }
 

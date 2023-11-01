@@ -2,6 +2,7 @@ package com.hx.infusionchairplateproject
 
 
 import android.annotation.SuppressLint
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
@@ -52,17 +53,18 @@ import coil.size.Scale
 import com.hx.infusionchairplateproject.viewmodel.LockViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import android.provider.Settings
 import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.imageResource
 import com.hx.infusionchairplateproject.tools.GeneralUtil
+import com.hx.infusionchairplateproject.viewmodel.SocketViewModel
 
 
 class LockScreenActivity : BaseActivity() {
 
     private val TAG:String = "liudehua-LockScreenActivity"
-    private val debug:Boolean = false
+    private val debug:Boolean = true
     private val lockViewModel:LockViewModel by viewModels()
     private lateinit var snAddress:String
 
@@ -118,8 +120,7 @@ class LockScreenActivity : BaseActivity() {
             }
         }
 
-        snAddress = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-//        snAddress = "7726c6b1e1963a52"
+        snAddress = (application as EntiretyApplication).getSnAddress()
         if (debug) Log.d(TAG, "onCreate: snAddress = $snAddress")
 
 
@@ -134,12 +135,32 @@ class LockScreenActivity : BaseActivity() {
 
     @Composable
     private fun checkDeviceState() {
+        val lockViewModel:LockViewModel = viewModel()
+        val socketViewModel: SocketViewModel = viewModel()
         val putInState by lockViewModel.putInState.collectAsState()
-        val bitmap = GeneralUtil.getTwoDimensionalMap(snAddress, LocalContext.current).asImageBitmap()
+        val recvIsPutIn by socketViewModel.isPutIn.collectAsState()
+        val recvScanState by socketViewModel.isScan.collectAsState()
+
+        var bitmap:ImageBitmap
+        if (recvScanState == socketViewModel.SCAN_STATE_OK) {
+            bitmap = ImageBitmap.imageResource(id = R.mipmap.scan_ok)
+            Log.i(TAG, "checkDeviceState: 11111111111")
+        } else if (recvScanState == socketViewModel.SCAN_STATE_NO){
+            bitmap = ImageBitmap.imageResource(id = R.mipmap.scan_no)
+            Log.i(TAG, "checkDeviceState: 2222222222222222")
+        } else {
+            bitmap = GeneralUtil.getTwoDimensionalMap(snAddress, LocalContext.current).asImageBitmap()
+            Log.i(TAG, "checkDeviceState: 333333333333333333")
+        }
+
         if (!putInState) {
-            Box{
-                Image(painterResource(id = R.mipmap.llm_device_id), contentDescription = "投放页背景")
-                Image(bitmap = bitmap, contentDescription = "投放二维码", modifier = Modifier.align(Alignment.TopCenter).offset(30.dp, 80.dp))
+            if (!recvIsPutIn) {
+                Box{
+                    Image(painterResource(id = R.mipmap.llm_device_id), contentDescription = "投放页背景")
+                    Image(bitmap = bitmap, contentDescription = "投放二维码", modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .offset(30.dp, 80.dp))
+                }
             }
         }
     }
