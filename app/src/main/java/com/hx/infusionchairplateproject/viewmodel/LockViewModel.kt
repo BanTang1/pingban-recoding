@@ -26,7 +26,7 @@ import retrofit2.Response
 class LockViewModel : ViewModel() {
 
     private val TAG:String = "liudehua-LockViewModel"
-    private val debug:Boolean = true
+    private val debug:Boolean = false
     private val viewModelJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
     private var isScreenLoadSuccess:Boolean = false
@@ -59,23 +59,40 @@ class LockViewModel : ViewModel() {
 
     fun updateInfo(sn: String) {
         uiScope.launch {
-            while (!isScreenLoadSuccess){
+            do {
+                isScreenLoadSuccess = false
                 withContext(Dispatchers.IO) {
                     realUpdateInfo(sn)
                     delay(2000L)
                 }
-            }
+            } while (!isScreenLoadSuccess)
+
+//            while (!isScreenLoadSuccess){
+//                withContext(Dispatchers.IO) {
+//                    realUpdateInfo(sn)
+//                    delay(2000L)
+//                }
+//            }
         }
     }
 
     fun updatePutInState(sn:String) {
         uiScope.launch {
-            while (!isScreenLoadSuccess){
+            do {
+                isPutInSuccess = false
                 withContext(Dispatchers.IO) {
-                    realUpdatePutInState(sn)
-                    delay(2000L)
+                realUpdatePutInState(sn)
+                delay(2000L)
                 }
-            }
+            } while (!isPutInSuccess)
+
+
+//            while (!isPutInSuccess){
+//                withContext(Dispatchers.IO) {
+//                    realUpdatePutInState(sn)
+//                    delay(2000L)
+//                }
+//            }
         }
     }
 

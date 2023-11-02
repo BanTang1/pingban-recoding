@@ -1,6 +1,7 @@
 package com.hx.infusionchairplateproject.tools
 
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
@@ -17,6 +18,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+
 
 class GeneralUtil {
 
@@ -76,6 +78,21 @@ class GeneralUtil {
             val absolutePath = File(Environment.getExternalStorageDirectory(), "hx/pad/webSocket.text").absolutePath
 
             realWriteFile(absolutePath, text)
+        }
+
+        /**
+         * 判断某个Activity在栈顶
+         */
+        open fun isActivityTop(context: Context, activityClass: Class<*>): Boolean {
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            val tasks = activityManager.getRunningTasks(1)
+            if (tasks.isNotEmpty()) {
+                val topActivity = tasks[0].topActivity
+                if (topActivity!!.className == activityClass.name) {
+                    return true
+                }
+            }
+            return false
         }
 
 

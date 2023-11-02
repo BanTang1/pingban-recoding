@@ -2,13 +2,12 @@ package com.hx.infusionchairplateproject
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.content.Intent
 import android.provider.Settings
 import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import com.hx.infusionchairplateproject.network.NetworkManager
 import com.hx.infusionchairplateproject.tools.GeneralUtil
-import com.hx.infusionchairplateproject.tools.GeneralUtil.Companion.getWifiRssi
-import com.hx.infusionchairplateproject.viewmodel.LockViewModel
 import com.hx.infusionchairplateproject.viewmodel.SocketViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -25,11 +24,11 @@ import java.net.URI
 
 class EntiretyApplication : Application() {
 
-    val TAG = "liudehu-EntiretyApplication"
+    val TAG = "liudehua-EntiretyApplication"
 
-    private var debug = true
+    private var debug:Boolean = false
 
-    private lateinit var snAddress:String
+    private lateinit var snAddress: String
     private lateinit var socketViewModel: SocketViewModel
     private lateinit var client: WebSocketClient
     private var isConnected = false
@@ -38,8 +37,8 @@ class EntiretyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-//        snAddress = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-        snAddress = "7726c6b1e1963a52-test"
+        snAddress = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+//        snAddress = "7726c6b1e1963a52-test"
 
         socketViewModel = ViewModelProvider.AndroidViewModelFactory.getInstance(this).create(SocketViewModel::class.java)
 
@@ -47,7 +46,7 @@ class EntiretyApplication : Application() {
         startHeartbeat()
     }
 
-    fun getSnAddress():String{
+    fun getSnAddress(): String {
         return snAddress
     }
 
@@ -65,6 +64,8 @@ class EntiretyApplication : Application() {
                     client.send(getSocketHeartbeatMsg())
                     delay(10000L)
                 }
+                // disconnect ,sleep 2s. Wait for connection...
+                delay(2000L)
             }
         }
     }
@@ -101,22 +102,67 @@ class EntiretyApplication : Application() {
                 val type = jsonObject.optInt("type")
                 val other = jsonObject.optString("other")
 
-                when(type) {
-                    0 -> {socketViewModel.isPutIn.value = false}
-                    1 -> {socketViewModel.isPutIn.value = true}
+                when (type) {
+                    0 -> {
+                        socketViewModel.isPutIn.value = false
+                    }
+
+                    1 -> {
+                        socketViewModel.isPutIn.value = true
+                    }
+
                     2 -> {
-                        socketViewModel.isScan.value = socketViewModel.SCAN_STATE_OK
-                        GlobalScope.launch {
-                            delay(2000L)
-                            socketViewModel.isScan.value = socketViewModel.SCAN_STATE_DEFAULT
+                        socketViewModel.putInIsScan.value = socketViewModel.SCAN_STATE_OK
+                        stateDelayChange("putIn", 2000L)
+                    }
+
+                    3 -> {
+                        socketViewModel.putInIsScan.value = socketViewModel.SCAN_STATE_NO
+                        stateDelayChange("putIn", 2000L)
+                    }
+
+                    4 -> {
+                        socketViewModel.putInIsScan.value = socketViewModel.SCAN_STATE_REFUSE
+                        stateDelayChange("putIn", 2000L)
+                    }
+
+                    5 -> {
+                        val showtime: Int = other.toInt()
+                        if (showtime > 0) {
+                            val intent = Intent(this@EntiretyApplication, AllAppActivity::class.java)
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(intent)
+                        } else {
+                            if (!GeneralUtil.isActivityTop(this@EntiretyApplication, LockScreenActivity::class.java)) {
+                                val intent = Intent(this@EntiretyApplication, LockScreenActivity::class.java)
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                startActivity(intent)
+                                // TODO 清除数据   以及本地解锁时间双重判断
+                            }
                         }
                     }
-                    3 -> {
-                        socketViewModel.isScan.value = socketViewModel.SCAN_STATE_NO
-                        GlobalScope.launch {
-                            delay(2000L)
-                            socketViewModel.isScan.value = socketViewModel.SCAN_STATE_DEFAULT
-                        }
+
+                    6 -> {
+                        socketViewModel.screenIsScan.value = socketViewModel.SCAN_STATE_OK
+                        stateDelayChange("lockScreen", 2000L)
+                    }
+
+                    7 -> {
+                        socketViewModel.screenIsScan.value = socketViewModel.SCAN_STATE_NO
+                        stateDelayChange("lockScreen", 2000L)
+                    }
+
+                    8 -> {
+                        socketViewModel.screenIsScan.value = socketViewModel.SCAN_STATE_REFUSE
+                        stateDelayChange("lockScreen", 2000L)
+                    }
+
+                    9 -> {
+                        val intent = Intent(this@EntiretyApplication, LockScreenActivity::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        intent.putExtra("control","abort")
+                        startActivity(intent)
+                        socketViewModel.isPutIn.value = false
                     }
                 }
 
@@ -140,7 +186,7 @@ class EntiretyApplication : Application() {
     }
 
 
-    private fun getSocketFirstConnectMsg() : String{
+    private fun getSocketFirstConnectMsg(): String {
         val packageInfo = packageManager.getPackageInfo(packageName, 0)
         val versionName: String = packageInfo.versionName
         val versionCode: Long = packageInfo.longVersionCode
@@ -157,7 +203,7 @@ class EntiretyApplication : Application() {
     }
 
 
-    private fun getSocketHeartbeatMsg() : String{
+    private fun getSocketHeartbeatMsg(): String {
         val level = getWifiRssi()
         val jsonString = """{
             "type":"HEARTBEAT",
@@ -186,4 +232,19 @@ class EntiretyApplication : Application() {
         return level
     }
 
+    fun getSocketViewModel(): SocketViewModel {
+        return socketViewModel
+
+    }
+
+    private fun stateDelayChange(who: String, delayTime: Long) {
+        GlobalScope.launch {
+            delay(delayTime)
+            if (who == "putIn") {
+                socketViewModel.putInIsScan.value = socketViewModel.SCAN_STATE_DEFAULT
+            } else if (who == "lockScreen") {
+                socketViewModel.screenIsScan.value = socketViewModel.SCAN_STATE_DEFAULT
+            }
+        }
+    }
 }

@@ -2,7 +2,7 @@ package com.hx.infusionchairplateproject
 
 
 import android.annotation.SuppressLint
-import android.graphics.BitmapFactory
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
@@ -43,7 +43,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -59,18 +58,33 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.imageResource
 import com.hx.infusionchairplateproject.tools.GeneralUtil
 import com.hx.infusionchairplateproject.viewmodel.SocketViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 
 
 class LockScreenActivity : BaseActivity() {
 
     private val TAG:String = "liudehua-LockScreenActivity"
-    private val debug:Boolean = true
+    private val debug:Boolean = false
     private val lockViewModel:LockViewModel by viewModels()
+    private lateinit var socketViewModel: SocketViewModel
     private lateinit var snAddress:String
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        if (intent == null) return
+
+        val control = intent.getStringExtra("control")
+        if (control == "abort"){
+            updateAllDate()
+        }
+    }
 
     @SuppressLint("HardwareIds")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        socketViewModel = (application as EntiretyApplication).getSocketViewModel()
 
         setContent {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -123,33 +137,29 @@ class LockScreenActivity : BaseActivity() {
         snAddress = (application as EntiretyApplication).getSnAddress()
         if (debug) Log.d(TAG, "onCreate: snAddress = $snAddress")
 
+        updateAllDate()
 
+    }
+
+    /**
+     * 从服务器获取所有需要的信息
+     */
+    private fun updateAllDate(){
         lockViewModel.apply {
             updateInfo(snAddress)
             updatePromptMessage(this@LockScreenActivity)
             updateNetState(this@LockScreenActivity)
             updatePutInState(snAddress)
         }
-
     }
 
     @Composable
     private fun checkDeviceState() {
-        val lockViewModel:LockViewModel = viewModel()
-        val socketViewModel: SocketViewModel = viewModel()
         val putInState by lockViewModel.putInState.collectAsState()
         val recvIsPutIn by socketViewModel.isPutIn.collectAsState()
-        val recvScanState by socketViewModel.isScan.collectAsState()
+        val recvScanState by socketViewModel.putInIsScan.collectAsState()
 
-        var bitmap:ImageBitmap
-        if (recvScanState == socketViewModel.SCAN_STATE_OK) {
-            bitmap = ImageBitmap.imageResource(id = R.mipmap.scan_ok)
-        } else if (recvScanState == socketViewModel.SCAN_STATE_NO){
-            bitmap = ImageBitmap.imageResource(id = R.mipmap.scan_no)
-        } else {
-            bitmap = GeneralUtil.getTwoDimensionalMap(snAddress, LocalContext.current).asImageBitmap()
-        }
-
+        val bitmap:ImageBitmap = GeneralUtil.getTwoDimensionalMap(snAddress, LocalContext.current).asImageBitmap()
         if (!putInState) {
             if (!recvIsPutIn) {
                 Box{
@@ -157,6 +167,26 @@ class LockScreenActivity : BaseActivity() {
                     Image(bitmap = bitmap, contentDescription = "投放二维码", modifier = Modifier
                         .align(Alignment.TopCenter)
                         .offset(30.dp, 80.dp))
+
+                    when(recvScanState) {
+                        0 -> {}
+                        1 -> {
+                            Image(bitmap = ImageBitmap.imageResource(R.mipmap.scan_ok), contentDescription = "扫码成功",modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .offset(30.dp, 110.dp))
+                        }
+                        2 -> {
+                            Image(bitmap = ImageBitmap.imageResource(R.mipmap.scan_no), contentDescription = "扫码失败",modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .offset(30.dp, 110.dp))
+                        }
+                        3 -> {
+                            Image(bitmap = ImageBitmap.imageResource(R.mipmap.scan_refuse), contentDescription = "已拒绝本次扫码",modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .offset(30.dp, 110.dp))
+                        }
+                    }
+
                 }
             }
         }
@@ -300,39 +330,61 @@ class LockScreenActivity : BaseActivity() {
     fun TwoDimensionalCode(){
         val viewModel: LockViewModel = viewModel()
         val qrCodeBitmap by viewModel.qrCodeBitmap.collectAsState()
+        val scanState by socketViewModel.screenIsScan.collectAsState()
+
         val retryCount = remember { mutableStateOf(0) }
         val maxRetries = 3      // reconnect count
 
         if (qrCodeBitmap != "") {
-            AsyncImage(
-                model = ImageRequest
-                    .Builder(LocalContext.current)
-                    .data(qrCodeBitmap)
-                    .scale(Scale.FILL)
-                    .placeholder(R.mipmap.shibai)
-                    .error(R.mipmap.shibai)
-                    .listener(
-                        onError = { _, _->
-                            if (retryCount.value < maxRetries) {
-                                retryCount.value++
-                            }
-                        })
-                    .build(),
-                contentDescription = "二维码",
-                modifier = Modifier
-                    .height(100.dp)
-                    .width(100.dp),
-                contentScale = ContentScale.FillBounds
-            )
+            Box{
+                AsyncImage(
+                    model = ImageRequest
+                        .Builder(LocalContext.current)
+                        .data(qrCodeBitmap)
+                        .scale(Scale.FILL)
+                        .placeholder(R.mipmap.shibai)
+                        .error(R.mipmap.shibai)
+                        .listener(
+                            onError = { _, _->
+                                if (retryCount.value < maxRetries) {
+                                    retryCount.value++
+                                }
+                            })
+                        .build(),
+                    contentDescription = "二维码",
+                    modifier = Modifier
+                        .height(100.dp)
+                        .width(100.dp),
+                    contentScale = ContentScale.FillBounds
+                )
+
+                when(scanState) {
+                    0 -> {}
+                    1 -> {
+                        Image(bitmap = ImageBitmap.imageResource(R.mipmap.scan_ok), contentDescription = "扫码成功",modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = 30.dp)
+                            .width(50.dp)
+                            .height(50.dp))
+                    }
+                    2 -> {
+                        Image(bitmap = ImageBitmap.imageResource(R.mipmap.scan_no), contentDescription = "扫码失败",modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = 30.dp)
+                            .width(50.dp)
+                            .height(50.dp))
+                    }
+                    3 -> {
+                        Image(bitmap = ImageBitmap.imageResource(R.mipmap.scan_refuse), contentDescription = "扫码拒绝",modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = 30.dp)
+                            .width(50.dp)
+                            .height(50.dp))
+                    }
+                }
+            }
         }
     }
 
-
-}
-
-
-@Preview(showBackground = true, widthDp = 1920, heightDp = 1200)
-@Composable
-fun show(){
 
 }

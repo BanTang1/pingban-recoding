@@ -6,6 +6,9 @@ import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 
+/**
+ * create by zh on 2023/11/2
+ */
 open class BaseActivity : AppCompatActivity() {
 
     /**
