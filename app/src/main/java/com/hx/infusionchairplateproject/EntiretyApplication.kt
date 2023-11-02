@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import com.hx.infusionchairplateproject.network.NetworkManager
+import com.hx.infusionchairplateproject.tools.CommandTool
 import com.hx.infusionchairplateproject.tools.GeneralUtil
 import com.hx.infusionchairplateproject.viewmodel.SocketViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -24,9 +25,9 @@ import java.net.URI
 
 class EntiretyApplication : Application() {
 
-    val TAG = "liudehua-EntiretyApplication"
+    private val TAG = "liudehua-EntiretyApplication"
 
-    private var debug:Boolean = false
+    private var debug: Boolean = false
 
     private lateinit var snAddress: String
     private lateinit var socketViewModel: SocketViewModel
@@ -105,25 +106,30 @@ class EntiretyApplication : Application() {
                 when (type) {
                     0 -> {
                         socketViewModel.isPutIn.value = false
+                        send(getOnMessageWriteBack("NOT-RELEASED"))
                     }
 
                     1 -> {
                         socketViewModel.isPutIn.value = true
+                        send(getOnMessageWriteBack("YES-RELEASED"))
                     }
 
                     2 -> {
                         socketViewModel.putInIsScan.value = socketViewModel.SCAN_STATE_OK
                         stateDelayChange("putIn", 2000L)
+                        send(getOnMessageWriteBack("PUTIN-SCAN-OK"))
                     }
 
                     3 -> {
                         socketViewModel.putInIsScan.value = socketViewModel.SCAN_STATE_NO
                         stateDelayChange("putIn", 2000L)
+                        send(getOnMessageWriteBack("PUTIN-SCAN-NO"))
                     }
 
                     4 -> {
                         socketViewModel.putInIsScan.value = socketViewModel.SCAN_STATE_REFUSE
                         stateDelayChange("putIn", 2000L)
+                        send(getOnMessageWriteBack("PUTIN-SCAN-REFUSE"))
                     }
 
                     5 -> {
@@ -132,11 +138,13 @@ class EntiretyApplication : Application() {
                             val intent = Intent(this@EntiretyApplication, AllAppActivity::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             startActivity(intent)
+                            send(getOnMessageWriteBack("UNLOCK"))
                         } else {
                             if (!GeneralUtil.isActivityTop(this@EntiretyApplication, LockScreenActivity::class.java)) {
                                 val intent = Intent(this@EntiretyApplication, LockScreenActivity::class.java)
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 startActivity(intent)
+                                send(getOnMessageWriteBack("LOCK"))
                                 // TODO 清除数据   以及本地解锁时间双重判断
                             }
                         }
@@ -145,24 +153,38 @@ class EntiretyApplication : Application() {
                     6 -> {
                         socketViewModel.screenIsScan.value = socketViewModel.SCAN_STATE_OK
                         stateDelayChange("lockScreen", 2000L)
+                        send(getOnMessageWriteBack("SCREEN-SCAN-OK"))
                     }
 
                     7 -> {
                         socketViewModel.screenIsScan.value = socketViewModel.SCAN_STATE_NO
                         stateDelayChange("lockScreen", 2000L)
+                        send(getOnMessageWriteBack("SCREEN-SCAN-NO"))
                     }
 
                     8 -> {
                         socketViewModel.screenIsScan.value = socketViewModel.SCAN_STATE_REFUSE
                         stateDelayChange("lockScreen", 2000L)
+                        send(getOnMessageWriteBack("SCREEN-SCAN-REFUSE"))
                     }
 
                     9 -> {
                         val intent = Intent(this@EntiretyApplication, LockScreenActivity::class.java)
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        intent.putExtra("control","abort")
+                        intent.putExtra("control", "abort")
                         startActivity(intent)
                         socketViewModel.isPutIn.value = false
+                        send(getOnMessageWriteBack("PUTOUT"))
+                        // TODO 本地计时归零
+                    }
+
+                    10 -> {
+                        send(getOnMessageWriteBack("REBOOT"))
+                        CommandTool.execSuCMD("reboot")
+                    }
+
+                    11 -> {
+
                     }
                 }
 
@@ -213,6 +235,18 @@ class EntiretyApplication : Application() {
             }
         }"""
         if (debug) Log.d(TAG, "socket heartbeat,send -> $jsonString")
+        return jsonString
+    }
+
+    private fun getOnMessageWriteBack(feedbackType: String) : String{
+        val jsonString = """{
+            "type":"FEEDBACK",
+            "data":{
+                "deviceId":"$snAddress",
+                "val":"$feedbackType"
+            }   
+        }"""
+        if (debug) Log.d(TAG, "OnMessage Write Back: send -> $jsonString")
         return jsonString
     }
 
