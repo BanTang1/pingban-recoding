@@ -3,9 +3,12 @@ package com.hx.infusionchairplateproject
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.provider.Settings
 import android.util.Log
 import androidx.lifecycle.ViewModelProvider
+import com.hjq.toast.Toaster
+import com.hx.infusionchairplateproject.databeen.AndroidVersion
 import com.hx.infusionchairplateproject.network.NetworkManager
 import com.hx.infusionchairplateproject.tools.CommandTool
 import com.hx.infusionchairplateproject.tools.GeneralUtil
@@ -20,12 +23,15 @@ import kotlinx.coroutines.launch
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.net.URI
 
 
 class EntiretyApplication : Application() {
 
-    private val TAG = "liudehua-EntiretyApplication"
+    private val TAG = "liudehua_EntiretyApplication"
 
     private var debug: Boolean = false
 
@@ -34,9 +40,16 @@ class EntiretyApplication : Application() {
     private lateinit var client: WebSocketClient
     private var isConnected = false
 
+    private val appPkgList = mutableListOf<String>()
+
     @SuppressLint("HardwareIds")
     override fun onCreate() {
         super.onCreate()
+
+        initAppPkgList()
+
+        // 初始化 Toast 框架
+        Toaster.init(this)
 
         snAddress = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
 //        snAddress = "7726c6b1e1963a52-test"
@@ -45,6 +58,29 @@ class EntiretyApplication : Application() {
 
         realReconnect()
         startHeartbeat()
+    }
+
+    private fun initAppPkgList() {
+        appPkgList.clear()
+        appPkgList.add("com.qiyi.video.pad")
+        appPkgList.add("com.youku.phone")
+        appPkgList.add("tv.danmaku.bilibilihd")
+        appPkgList.add("air.com.miracle.gobang")
+        appPkgList.add("com.tinmanarts.JoJoSherlock")
+        appPkgList.add("com.sinyee.babybus.kitchen")
+        appPkgList.add("com.cdkaw.etyzmg")
+        appPkgList.add("com.sinyee.babybus.findCha")
+        appPkgList.add("com.tencent.qqlivekid")
+        appPkgList.add("com.tencent.qqlive")
+        appPkgList.add("com.sinyee.babybus.splice")
+        appPkgList.add("com.sinyee.babybus.cultivation")
+        appPkgList.add("com.sinyee.babybus.shopping")
+        appPkgList.add("com.sinyee.babybus.superman")
+        appPkgList.add("com.zhangpei.pinyin")
+        appPkgList.add("com.sinyee.education.color_new")
+        appPkgList.add("com.bb.happykids")
+        appPkgList.add("com.qiyi.video.child")
+        appPkgList.add("com.sinyee.babybus.initiation")
     }
 
     fun getSnAddress(): String {
@@ -106,35 +142,35 @@ class EntiretyApplication : Application() {
                 when (type) {
                     0 -> {
                         socketViewModel.isPutIn.value = false
-                        send(getOnMessageWriteBack("NOT-RELEASED"))
+                        send(getOnMessageWriteBack("NOT_RELEASED"))
                     }
 
                     1 -> {
                         socketViewModel.isPutIn.value = true
-                        send(getOnMessageWriteBack("YES-RELEASED"))
+                        send(getOnMessageWriteBack("YES_RELEASED"))
                     }
 
                     2 -> {
                         socketViewModel.putInIsScan.value = socketViewModel.SCAN_STATE_OK
                         stateDelayChange("putIn", 2000L)
-                        send(getOnMessageWriteBack("PUTIN-SCAN-OK"))
+                        send(getOnMessageWriteBack("PUTIN-SCAN_OK"))
                     }
 
                     3 -> {
                         socketViewModel.putInIsScan.value = socketViewModel.SCAN_STATE_NO
                         stateDelayChange("putIn", 2000L)
-                        send(getOnMessageWriteBack("PUTIN-SCAN-NO"))
+                        send(getOnMessageWriteBack("PUTIN-SCAN_NO"))
                     }
 
                     4 -> {
                         socketViewModel.putInIsScan.value = socketViewModel.SCAN_STATE_REFUSE
                         stateDelayChange("putIn", 2000L)
-                        send(getOnMessageWriteBack("PUTIN-SCAN-REFUSE"))
+                        send(getOnMessageWriteBack("PUTIN_SCAN_REFUSE"))
                     }
 
                     5 -> {
                         val showtime: Int = other.toInt()
-                        if (showtime > 0) {
+                        if (showtime > 0 && !GeneralUtil.isActivityTop(this@EntiretyApplication,AllAppActivity::class.java)) {
                             val intent = Intent(this@EntiretyApplication, AllAppActivity::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             startActivity(intent)
@@ -153,19 +189,19 @@ class EntiretyApplication : Application() {
                     6 -> {
                         socketViewModel.screenIsScan.value = socketViewModel.SCAN_STATE_OK
                         stateDelayChange("lockScreen", 2000L)
-                        send(getOnMessageWriteBack("SCREEN-SCAN-OK"))
+                        send(getOnMessageWriteBack("SCREEN_SCAN_OK"))
                     }
 
                     7 -> {
                         socketViewModel.screenIsScan.value = socketViewModel.SCAN_STATE_NO
                         stateDelayChange("lockScreen", 2000L)
-                        send(getOnMessageWriteBack("SCREEN-SCAN-NO"))
+                        send(getOnMessageWriteBack("SCREEN_SCAN_NO"))
                     }
 
                     8 -> {
                         socketViewModel.screenIsScan.value = socketViewModel.SCAN_STATE_REFUSE
                         stateDelayChange("lockScreen", 2000L)
-                        send(getOnMessageWriteBack("SCREEN-SCAN-REFUSE"))
+                        send(getOnMessageWriteBack("SCREEN_SCAN_REFUSE"))
                     }
 
                     9 -> {
@@ -184,7 +220,55 @@ class EntiretyApplication : Application() {
                     }
 
                     11 -> {
+                        updateAndroidVersion()
+                    }
 
+                    12 -> {
+                        // TODO 三方应用升级 初步想法：直接从服务器中重新下载安装所有的三方App
+                    }
+
+                    13 -> {
+                        // TODO 进入WIFI 界面  WIFI 界面待实现
+                    }
+
+                    14 -> {
+                        //TODO 退出WIFI 界面，  WIFI界面待实现
+                    }
+
+                    15 -> {
+                        // TODO   打开充电线    实际功能后续实现， SDK 以及  管理类（/ch340）已经移植
+                    }
+
+                    16 -> {
+                        // TODO 关闭充电线  实际功能后续实现， SDK 以及  管理类（/ch340）已经移植
+                    }
+
+                    17 -> {
+                        // TODO 查看充电线状态(打卡/关闭)  实际功能后续实现， SDK 以及  管理类（/ch340）已经移植
+                    }
+
+                    18 -> {
+                        send(getOnMessageWriteBack("CLEAR_ALL_APPS"))
+                        CoroutineScope(Dispatchers.IO).launch {
+                            CommandTool.execSuCMD("rm -rf /sdcard/TripartiteApp")
+                            //  /vendor 目录下  无法卸载，可卸载更新过的版本
+                            for (pak in appPkgList) {
+                                CommandTool.execSuCMD("pm uninstall $pak")
+                            }
+                        }
+                    }
+
+                    19 -> {
+                        send(getOnMessageWriteBack("CLEAR_DESIGNATE_APP"))
+                        CoroutineScope(Dispatchers.IO).launch {
+                            val parts: List<String> = other.split(",")
+                            for (part in parts) {
+                                //  /vendor 目录下  无法卸载，可卸载更新过的版本
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    CommandTool.execSuCMD("pm uninstall $part")
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -238,7 +322,7 @@ class EntiretyApplication : Application() {
         return jsonString
     }
 
-    private fun getOnMessageWriteBack(feedbackType: String) : String{
+    private fun getOnMessageWriteBack(feedbackType: String): String {
         val jsonString = """{
             "type":"FEEDBACK",
             "data":{
@@ -281,4 +365,70 @@ class EntiretyApplication : Application() {
             }
         }
     }
+
+
+    /**
+     * 检查版本更新
+     */
+    private fun updateAndroidVersion() {
+        CoroutineScope(Dispatchers.IO).launch {
+
+            val versionInfo = NetworkManager.getInstance().requestApi.androidVersion
+            versionInfo.enqueue(object : Callback<AndroidVersion> {
+                override fun onResponse(call: Call<AndroidVersion>, response: Response<AndroidVersion>) {
+                    if (!response.isSuccessful) {
+                        if (debug) Log.d(TAG, "onResponse: 版本响应异常")
+                        return
+                    }
+                    if (response.code() != 200) {
+                        if (debug) Log.d(TAG, "onResponse: 版本响应码异常 Code = ${response.code()}")
+                        return
+                    }
+
+                    val versionInfo = response.body()
+
+                    if (versionInfo == null) {
+                        if (debug) Log.d(TAG, "onResponse: 版本响应为空")
+                        return
+                    }
+
+                    if (versionInfo.status != 200) {
+                        if (debug) Log.d(TAG, "onResponse: 版本响应状态码异常 Status = ${versionInfo.status}")
+                        return
+                    }
+
+                    // version info  success
+                    val packageInfo: PackageInfo = this@EntiretyApplication.packageManager.getPackageInfo(this@EntiretyApplication.packageName, 0)
+                    val localVersionCode = packageInfo.longVersionCode
+                    val remoteVersionCode = versionInfo.data.versionCode
+
+                    if (localVersionCode >= remoteVersionCode) {
+                        if (debug) Log.d(TAG, "onResponse: 当前版本已是最新版本")
+                        client.send(getOnMessageWriteBack("UPDATE_NO"))
+                        Toaster.show("当前版本已是最新版本")
+                        return
+                    }
+
+                    if (!GeneralUtil.isActivityTop(this@EntiretyApplication, LockScreenActivity::class.java)) {
+                        if (debug) Log.d(TAG, "onResponse: 用户正在使用，取消本次更新")
+                        Toaster.showShort("用户正在使用，取消本次更新")
+                        return
+                    }
+
+                    // real start update
+                    if (debug) Log.d(TAG, "onResponse: 小于最低版本,开始更新")
+                    client.send("UPDATE_YES")
+                    Toaster.showShort("小于最低版本,开始更新")
+                    // TODO  下载文件到指定路径 待实现  /storage/emulated/0/hxAndroidV
+
+                }
+
+                override fun onFailure(call: Call<AndroidVersion>, t: Throwable) {
+                    if (debug) Log.d(TAG, "onFailure: t = $t")
+                }
+
+            })
+        }
+    }
+
 }

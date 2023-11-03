@@ -130,4 +130,29 @@
 
     </application>
 
+
+
+    <queries>
+        <package android:name="com.qiyi.video.pad" />
+        <package android:name="com.youku.phone" />
+        <package android:name="tv.danmaku.bilibilihd" />
+        <package android:name="air.com.miracle.gobang" />
+        <package android:name="com.tinmanarts.JoJoSherlock" />
+        <package android:name="com.sinyee.babybus.kitchen" />
+        <package android:name="com.cdkaw.etyzmg" />
+        <package android:name="com.sinyee.babybus.findCha" />
+        <package android:name="com.tencent.qqlivekid" />
+        <package android:name="com.sinyee.babybus.splice" />
+        <package android:name="com.sinyee.babybus.cultivation" />
+        <package android:name="com.sinyee.babybus.shopping" />
+        <package android:name="com.sinyee.babybus.superman" />
+        <package android:name="com.zhangpei.pinyin" />
+        <package android:name="com.sinyee.education.color_new" />
+        <package android:name="com.bb.happykids" />
+        <package android:name="com.qiyi.video.child" />
+        <package android:name="com.sinyee.babybus.initiation" />
+        <package android:name="com.tencent.qqlive" />
+        <package android:name="com.hx.infusionchairplateproject"/>
+    </queries>
+
 </manifest>

@@ -1,6 +1,9 @@
 package com.hx.infusionchairplateproject.network;
 
+
+import com.hx.infusionchairplateproject.databeen.AndroidVersion;
 import com.hx.infusionchairplateproject.databeen.BaseBean;
+import com.hx.infusionchairplateproject.databeen.PadApkList;
 import com.hx.infusionchairplateproject.databeen.ScreenInfo;
 
 import retrofit2.Call;
@@ -20,6 +23,19 @@ public interface RequestApi {
      */
     @GET("pad/" + "check/status/{sn}")
     Call<BaseBean<String>> getDeviceStatus(@Path("sn") String sn);
+
+    /**
+     *  http://shuyeyi.dev.hxyihu.com/server/pad/android/version
+     *  获取软件版本
+     */
+    @GET("pad/" + "android/version")
+    Call<AndroidVersion> getAndroidVersion();
+
+    /**
+     * 获取指定类型的APP信息
+     */
+    @GET("pad/" + "soft/list/{categoryName}")
+    Call<PadApkList> getPadApkList(@Path("categoryName") String categoryName);
 
 
 }

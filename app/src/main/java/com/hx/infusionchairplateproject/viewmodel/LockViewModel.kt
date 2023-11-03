@@ -25,7 +25,7 @@ import retrofit2.Response
  */
 class LockViewModel : ViewModel() {
 
-    private val TAG:String = "liudehua-LockViewModel"
+    private val TAG:String = "liudehua_LockViewModel"
     private val debug:Boolean = false
     private val viewModelJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)

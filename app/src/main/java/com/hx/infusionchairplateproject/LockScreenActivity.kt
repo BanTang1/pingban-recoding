@@ -65,7 +65,7 @@ import kotlinx.coroutines.GlobalScope
 
 class LockScreenActivity : BaseActivity() {
 
-    private val TAG:String = "liudehua-LockScreenActivity"
+    private val TAG:String = "liudehua_LockScreenActivity"
     private val debug:Boolean = false
     private val lockViewModel:LockViewModel by viewModels()
     private lateinit var socketViewModel: SocketViewModel
