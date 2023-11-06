@@ -13,6 +13,8 @@ import com.hx.infusionchairplateproject.databeen.AndroidVersion
 import com.hx.infusionchairplateproject.network.NetworkManager
 import com.hx.infusionchairplateproject.tools.CommandTool
 import com.hx.infusionchairplateproject.tools.GeneralUtil
+import com.hx.infusionchairplateproject.ui.AllAppActivity
+import com.hx.infusionchairplateproject.ui.LockScreenActivity
 import com.hx.infusionchairplateproject.viewmodel.SocketViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -177,7 +179,7 @@ class EntiretyApplication : Application() {
 
                     5 -> {
                         val showtime: Int = other.toInt()
-                        if (showtime > 0 && !GeneralUtil.isActivityTop(this@EntiretyApplication,AllAppActivity::class.java)) {
+                        if (showtime > 0 && !GeneralUtil.isActivityTop(this@EntiretyApplication, AllAppActivity::class.java)) {
                             val intent = Intent(this@EntiretyApplication, AllAppActivity::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             startActivity(intent)

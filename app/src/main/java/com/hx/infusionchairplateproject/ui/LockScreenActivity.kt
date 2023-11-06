@@ -1,4 +1,4 @@
-package com.hx.infusionchairplateproject
+package com.hx.infusionchairplateproject.ui
 
 
 import android.annotation.SuppressLint
@@ -56,11 +56,11 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.imageResource
+import com.hx.infusionchairplateproject.BaseActivity
+import com.hx.infusionchairplateproject.EntiretyApplication
+import com.hx.infusionchairplateproject.R
 import com.hx.infusionchairplateproject.tools.GeneralUtil
 import com.hx.infusionchairplateproject.viewmodel.SocketViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 
 
 class LockScreenActivity : BaseActivity() {

@@ -1,4 +1,4 @@
-package com.hx.infusionchairplateproject
+package com.hx.infusionchairplateproject.ui
 
 import android.content.Intent
 import android.net.Uri
@@ -9,6 +9,8 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.widget.ImageView
+import com.hx.infusionchairplateproject.BaseActivity
+import com.hx.infusionchairplateproject.R
 import com.hx.infusionchairplateproject.tools.GeneralUtil
 
 /**

@@ -1,4 +1,4 @@
-package com.hx.infusionchairplateproject
+package com.hx.infusionchairplateproject.ui
 
 import android.content.Context
 import android.media.AudioManager
@@ -40,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
+import com.hx.infusionchairplateproject.BaseActivity
+import com.hx.infusionchairplateproject.R
 import com.hx.infusionchairplateproject.viewmodel.AllAppViewModel
 import com.hx.infusionchairplateproject.viewmodel.AppInfo
 
