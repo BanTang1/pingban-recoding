@@ -66,13 +66,6 @@ class LockViewModel : ViewModel() {
                     delay(2000L)
                 }
             } while (!isScreenLoadSuccess)
-
-//            while (!isScreenLoadSuccess){
-//                withContext(Dispatchers.IO) {
-//                    realUpdateInfo(sn)
-//                    delay(2000L)
-//                }
-//            }
         }
     }
 
@@ -85,14 +78,6 @@ class LockViewModel : ViewModel() {
                 delay(2000L)
                 }
             } while (!isPutInSuccess)
-
-
-//            while (!isPutInSuccess){
-//                withContext(Dispatchers.IO) {
-//                    realUpdatePutInState(sn)
-//                    delay(2000L)
-//                }
-//            }
         }
     }
 
