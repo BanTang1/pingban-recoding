@@ -2,6 +2,7 @@ package com.hx.infusionchairplateproject
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.provider.Settings
@@ -33,6 +34,10 @@ class EntiretyApplication : Application() {
 
     private val TAG = "liudehua_EntiretyApplication"
 
+    companion object {
+        lateinit var context: Context
+    }
+
     private var debug: Boolean = false
 
     private lateinit var snAddress: String
@@ -45,6 +50,8 @@ class EntiretyApplication : Application() {
     @SuppressLint("HardwareIds")
     override fun onCreate() {
         super.onCreate()
+
+        context = applicationContext
 
         initAppPkgList()
 
@@ -354,6 +361,7 @@ class EntiretyApplication : Application() {
         return socketViewModel
 
     }
+
 
     private fun stateDelayChange(who: String, delayTime: Long) {
         GlobalScope.launch {

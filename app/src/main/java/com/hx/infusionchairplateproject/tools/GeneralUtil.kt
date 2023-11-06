@@ -95,6 +95,20 @@ class GeneralUtil {
             return false
         }
 
+        /**
+         * 以列表的形式返回指定目录中的所有文件
+         *  /sdcard/TripartiteApp/
+         *  /storage/emulated/0/sdcard/TripartiteApp/
+         */
+        fun getFileNamesInDirectory(directoryPath: String): List<String> {
+            val directory = File(directoryPath)
+            if (!directory.exists() || !directory.isDirectory) {
+                println("Directory does not exist or is not a directory.")
+                return emptyList()
+            }
+            return directory.listFiles()?.map { it.name } ?: emptyList()
+        }
+
 
         /**
          * 文件大于 100M ，则清空， 之后再次写入

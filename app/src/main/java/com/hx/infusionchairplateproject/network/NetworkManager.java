@@ -14,7 +14,6 @@ public class NetworkManager {
     private static NetworkManager instance;
     private Retrofit retrofit;
     private RequestApi requestApi;
-    private WebSocketClient webSocketClient;
 
     /**
      * 数据请求服务器

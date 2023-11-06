@@ -4,6 +4,7 @@ package com.hx.infusionchairplateproject.network;
 import com.hx.infusionchairplateproject.databeen.AndroidVersion;
 import com.hx.infusionchairplateproject.databeen.BaseBean;
 import com.hx.infusionchairplateproject.databeen.PadApkList;
+import com.hx.infusionchairplateproject.databeen.PadApkLists;
 import com.hx.infusionchairplateproject.databeen.ScreenInfo;
 
 import retrofit2.Call;
@@ -32,10 +33,16 @@ public interface RequestApi {
     Call<AndroidVersion> getAndroidVersion();
 
     /**
-     * 获取指定类型的APP信息
+     * 获取指定类型的所有APP信息（Icon 包名 ....）
      */
     @GET("pad/" + "soft/list/{categoryName}")
     Call<PadApkList> getPadApkList(@Path("categoryName") String categoryName);
+
+    /**
+     * 获取所有App信息(URL地址)
+     */
+    @GET("pad/" + "soft/list")
+    Call<PadApkLists> getPadApkLists();
 
 
 }
