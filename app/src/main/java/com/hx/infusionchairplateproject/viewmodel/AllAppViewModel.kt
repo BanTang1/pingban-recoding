@@ -215,22 +215,47 @@ class AllAppViewModel : ViewModel() {
     @SuppressLint("SdCardPath")
     private fun downLoadApk(url: String) {
         DownloadMgr.getInstance().addTask(url, "/sdcard/TripartiteApp/${url.substringAfterLast("/")}", object : DownloadMgr.Callback() {
-            override fun onStart(url: String?) {
+            override fun onStart(url: String) {
                 Log.i("zh___", "onStart: url=$url")
+                updateDownloadProgress(url, 0)
             }
 
             override fun onProgress(url: String, progress: Long, total: Long) {
                 Log.i("zh___", "onProgress: url=$url  process = $progress  total = $total")
+                updateDownloadProgress(url, progress * 100 / total)
             }
 
             override fun onSuccess(url: String, l: Long) {
                 Log.i("zh___", "onSuccess: url=$url l=$l")
+                updateDownloadProgress(url, 100)
             }
 
             override fun onFailed(url: String, cancelled: Boolean, msg: String?) {
                 Log.i("zh___", "onFailed: url=$url cancelled=$cancelled msg=$msg")
+                updateDownloadProgress(url, -1)
             }
         })
+    }
+
+
+    /**
+     * url ： 指定App，唯一标识符
+     * progress : 进度条
+     */
+    private fun updateDownloadProgress(url: String, progress: Long) {
+        for (videoInfo in _videoApkList.value) {
+            if (videoInfo.url == url) {
+                videoInfo.progress = progress
+            }
+        }
+        for (gameInfo in _gameApkList.value) {
+            if (gameInfo.url == url) {
+                gameInfo.progress = progress
+            }
+        }
+        for (paintInfo in _paintApkList.value) {
+            paintInfo.progress = progress
+        }
     }
 
 
@@ -246,5 +271,6 @@ data class AppInfo(
     var name: String,
     var icon: String,
     var packageName: String,
-    var url: String
+    var url: String,
+    var progress: Long = 100
 )
