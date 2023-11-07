@@ -9,7 +9,7 @@ import com.hx.infusionchairplateproject.EntiretyApplication;
  * SharedPreferences 工具类
  */
 public class SPTool {
-    private static final String PREFS_NAME = "config";
+    private static final String PREFS_NAME = "new_config";
     private static final Context context = EntiretyApplication.context;
 
     public static void putString(String key, String value) {
