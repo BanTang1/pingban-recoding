@@ -47,7 +47,7 @@ public class MonitorService extends Service {
             }
 
             // 排除锁屏界面
-            if (GeneralUtil.Companion.isActivityTop(getApplicationContext(), LockScreenActivity.class)){
+            if (GeneralUtil.Companion.isActivityTop(getApplicationContext(), LockScreenActivity.class)) {
                 return;
             }
             // 排除WIFI界面
@@ -76,6 +76,7 @@ public class MonitorService extends Service {
         if (!isInit) {
             isInit = true;
             real_startForegroundService();
+            unlockTimetimer.schedule(unlockTimerTask, 0, 2000);
         }
     }
 
