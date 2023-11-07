@@ -56,6 +56,7 @@ import coil.size.Scale
 import com.hx.infusionchairplateproject.BaseActivity
 import com.hx.infusionchairplateproject.EntiretyApplication
 import com.hx.infusionchairplateproject.R
+import com.hx.infusionchairplateproject.service.MonitorService
 import com.hx.infusionchairplateproject.tools.GeneralUtil
 import com.hx.infusionchairplateproject.tools.SPTool
 import com.hx.infusionchairplateproject.viewmodel.LockViewModel
@@ -140,6 +141,12 @@ class LockScreenActivity : BaseActivity() {
 
         updateAllData()
 
+        // 启动监视器服务
+        val isRunning = GeneralUtil.isServiceRunning(this,MonitorService::class.java.name)
+        if (!isRunning){
+            startForegroundService(Intent(this, MonitorService::class.java))
+        }
+
     }
 
     override fun onResume() {
@@ -217,7 +224,7 @@ class LockScreenActivity : BaseActivity() {
             color = if (netState) Color.Black else Color.Red)
         Text(text = "版本号: $version",fontWeight = FontWeight.Bold, fontSize = 17.sp)
     }
-    
+
     @Composable
     fun PriceInformation(){
         val viewModel:LockViewModel = viewModel()

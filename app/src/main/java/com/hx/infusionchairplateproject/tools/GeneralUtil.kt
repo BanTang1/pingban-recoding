@@ -8,6 +8,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.os.Environment
+import android.text.TextUtils
 import com.hx.infusionchairplateproject.R
 import com.yzq.zxinglibrary.encode.CodeCreator
 import java.io.File
@@ -83,7 +84,7 @@ class GeneralUtil {
         /**
          * 判断某个Activity在栈顶
          */
-        open fun isActivityTop(context: Context, activityClass: Class<*>): Boolean {
+        fun isActivityTop(context: Context, activityClass: Class<*>): Boolean {
             val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             val tasks = activityManager.getRunningTasks(1)
             if (tasks.isNotEmpty()) {
@@ -107,6 +108,27 @@ class GeneralUtil {
                 return emptyList()
             }
             return directory.listFiles()?.map { it.name } ?: emptyList()
+        }
+
+        /**
+         * 判断一个服务是否正在运行
+         */
+        fun isServiceRunning(context: Context, serviceName: String?): Boolean {
+            if (TextUtils.isEmpty(serviceName)) {
+                return false
+            }
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+
+            // 最多获取 200 个正在运行的 Service
+            val infos = activityManager.getRunningServices(200)
+
+            // 遍历当前运行的 Service 信息, 如果找到相同名称的服务 , 说明某进程正在运行
+            for (info in infos) {
+                if (TextUtils.equals(info.service.className, serviceName)) {
+                    return true
+                }
+            }
+            return false
         }
 
 
