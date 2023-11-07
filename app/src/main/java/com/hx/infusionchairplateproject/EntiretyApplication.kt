@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
 import android.provider.Settings
 import android.util.Log
 import androidx.lifecycle.ViewModelProvider
@@ -13,6 +15,7 @@ import com.hx.infusionchairplateproject.databeen.AndroidVersion
 import com.hx.infusionchairplateproject.network.NetworkManager
 import com.hx.infusionchairplateproject.tools.CommandTool
 import com.hx.infusionchairplateproject.tools.GeneralUtil
+import com.hx.infusionchairplateproject.tools.SPTool
 import com.hx.infusionchairplateproject.ui.AllAppActivity
 import com.hx.infusionchairplateproject.ui.LockScreenActivity
 import com.hx.infusionchairplateproject.viewmodel.SocketViewModel
@@ -61,7 +64,7 @@ class EntiretyApplication : Application() {
         Toaster.init(this)
 
         snAddress = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-//        snAddress = "7726c6b1e1963a52-test"
+        SPTool.putString("mMACaddress", snAddress)
 
         socketViewModel = ViewModelProvider.AndroidViewModelFactory.getInstance(this).create(SocketViewModel::class.java)
 
@@ -144,7 +147,7 @@ class EntiretyApplication : Application() {
 
                 GeneralUtil.writeToFile(message)
 
-                var jsonObject: JSONObject = JSONObject(message)
+                val jsonObject: JSONObject = JSONObject(message)
                 val type = jsonObject.optInt("type")
                 val other = jsonObject.optString("other")
 
@@ -179,6 +182,7 @@ class EntiretyApplication : Application() {
 
                     5 -> {
                         val showtime: Int = other.toInt()
+                        SPTool.putLong("unlockTime", System.currentTimeMillis() + showtime * 1000L * 60)
                         if (showtime > 0 && !GeneralUtil.isActivityTop(this@EntiretyApplication, AllAppActivity::class.java)) {
                             val intent = Intent(this@EntiretyApplication, AllAppActivity::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -190,7 +194,7 @@ class EntiretyApplication : Application() {
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 startActivity(intent)
                                 send(getOnMessageWriteBack("LOCK"))
-                                // TODO 清除数据   以及本地解锁时间双重判断
+                                handleLockExtra()
                             }
                         }
                     }
@@ -220,7 +224,7 @@ class EntiretyApplication : Application() {
                         startActivity(intent)
                         socketViewModel.isPutIn.value = false
                         send(getOnMessageWriteBack("PUTOUT"))
-                        // TODO 本地计时归零
+                        SPTool.putLong("unlockTime", 0)
                     }
 
                     10 -> {
@@ -300,6 +304,58 @@ class EntiretyApplication : Application() {
         client.connectBlocking()
     }
 
+
+    private fun handleLockExtra() {
+        CoroutineScope(Dispatchers.IO).launch {
+            // tell to server ,lock screen
+            NetworkManager.getInstance().requestApi.lockScreen(snAddress).enqueue(object : Callback<String> {
+                override fun onResponse(call: Call<String>, response: Response<String>) {
+
+                }
+
+                override fun onFailure(call: Call<String>, t: Throwable) {
+
+                }
+
+            })
+            // clear app data
+            for (appPkg in appPkgList) {
+                CommandTool.execSuCMD("pm clear $appPkg")
+            }
+            // uninstall useless apps
+            unInstallThreeApp()
+        }
+    }
+
+    /**
+     * 1.获取非系统应用报名
+     * 2.排除我们自己的三方app的包名
+     * 3.卸载与我们无关的三方app
+     */
+    private fun unInstallThreeApp() {
+        // one
+        val installedPackages = packageManager.getInstalledPackages(PackageManager.GET_ACTIVITIES or PackageManager.GET_SERVICES)
+        val threePackages = ArrayList<String>()
+        for (info in installedPackages) {
+            val pkg = info.packageName
+            if (info.applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM == 0) {
+                threePackages.add(pkg)
+            }
+        }
+        // two
+        val difference = ArrayList(threePackages)
+        difference.removeAll(appPkgList)
+        difference.remove("com.emoji.keyboard.touchpal.go") // 保留SDK内置的触宝输入法
+        difference.remove("com.sohu.inputmethod.sogou") // 保留搜狗输入法
+        difference.remove("com.android.calendar") // 保留系统自带的日历
+        difference.remove("com.android.dreams.basic") // 保留系统自带的屏保
+        difference.remove("com.android.musicfx") // 保留系统自带的音乐均衡器
+        difference.remove("com.android.calculator2") // 保留系统自带的计算器
+        // three
+        for (pkg in difference) {
+            CommandTool.execSuCMD("pm uninstall $pkg")
+        }
+    }
 
     private fun getSocketFirstConnectMsg(): String {
         val packageInfo = packageManager.getPackageInfo(packageName, 0)

@@ -58,5 +58,11 @@ public interface RequestApi {
     @POST("pad/" + "soft/end/{id}")
     Call<BaseBean<String>> endDeviceLog(@Path("id") String appId);
 
+    /**
+     * 告诉后台 我这锁屏了
+     */
+    @POST("pad/" + "lock/screen/{sn}")
+    Call<String> lockScreen(@Path("sn") String sn);
+
 
 }

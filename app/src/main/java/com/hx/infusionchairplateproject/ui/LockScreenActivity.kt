@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
@@ -39,8 +40,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,18 +53,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
-import com.hx.infusionchairplateproject.viewmodel.LockViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import androidx.compose.foundation.layout.offset
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.res.imageResource
 import com.hx.infusionchairplateproject.BaseActivity
 import com.hx.infusionchairplateproject.EntiretyApplication
 import com.hx.infusionchairplateproject.R
 import com.hx.infusionchairplateproject.tools.GeneralUtil
+import com.hx.infusionchairplateproject.tools.SPTool
+import com.hx.infusionchairplateproject.viewmodel.LockViewModel
 import com.hx.infusionchairplateproject.viewmodel.SocketViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 class LockScreenActivity : BaseActivity() {
@@ -77,7 +78,7 @@ class LockScreenActivity : BaseActivity() {
 
         val control = intent.getStringExtra("control")
         if (control == "abort"){
-            updateAllDate()
+            updateAllData()
         }
     }
 
@@ -137,14 +138,23 @@ class LockScreenActivity : BaseActivity() {
         snAddress = (application as EntiretyApplication).getSnAddress()
         if (debug) Log.d(TAG, "onCreate: snAddress = $snAddress")
 
-        updateAllDate()
+        updateAllData()
 
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val unlockTime: Long = SPTool.getLong("unlockTime")
+        if (System.currentTimeMillis() < unlockTime) {
+            // 时间内
+            startActivity(Intent(this,AllAppActivity::class.java))
+        }
     }
 
     /**
      * 从服务器获取所有需要的信息
      */
-    private fun updateAllDate(){
+    private fun updateAllData(){
         lockViewModel.apply {
             updateInfo(snAddress)
             updatePromptMessage(this@LockScreenActivity)
