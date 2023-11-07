@@ -100,5 +100,7 @@ dependencies {
 
     implementation 'com.github.getActivity:Toaster:12.5'
 
+//    implementation 'com.github.princekin-f:EasyFloat:2.0.3' // 悬浮窗
+
 
 }

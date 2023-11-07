@@ -21,11 +21,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /**
- * 这个类需要服务器支持 分块传输
- * 我们在请求头中添加"Range: bytes=0-10"的作用是，告诉服务器本次请求我们只想获取文件0-10(包括10，共11字节)这块内容。
- * 如果服务器支持分块传输的话，则响应状态码为206，表示“部分内容”，并且同时响应头中变会包含”Content-Range“字段，如果不支持则不会包含，
- * 我们看看上面"Content-Range"的内容：
- * http://news.558idc.com/51972.html
+ * APK下载管理类
  */
 public class DownloadMgr {
     //    private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();

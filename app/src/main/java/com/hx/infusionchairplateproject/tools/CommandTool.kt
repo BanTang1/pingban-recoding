@@ -17,7 +17,7 @@ class CommandTool {
          * 用Root权限执行命令
          * 需设备支持Root权限
          */
-        open fun execSuCMD(cmd: String) {
+        open fun execSuCMD(cmd: String) : String{
             val command = cmd + "\n"
             var process: Process? = null
             var out: DataOutputStream? = null
@@ -42,6 +42,7 @@ class CommandTool {
                 }
                 if (!msg.contains("Failure")) {
                     // success
+                    return "success"
                 }
             } catch (e: IOException) {
                 e.printStackTrace()
@@ -55,6 +56,7 @@ class CommandTool {
                     e.printStackTrace()
                 }
             }
+            return "fail"
         }
 
     }

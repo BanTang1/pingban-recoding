@@ -6,9 +6,11 @@ import com.hx.infusionchairplateproject.databeen.BaseBean;
 import com.hx.infusionchairplateproject.databeen.PadApkList;
 import com.hx.infusionchairplateproject.databeen.PadApkLists;
 import com.hx.infusionchairplateproject.databeen.ScreenInfo;
+import com.hx.infusionchairplateproject.databeen.StartRound;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.POST;
 import retrofit2.http.Path;
 
 public interface RequestApi {
@@ -43,6 +45,18 @@ public interface RequestApi {
      */
     @GET("pad/" + "soft/list")
     Call<PadApkLists> getPadApkLists();
+
+    /**
+     * 开始设备软件使用记录
+     */
+    @POST("pad/" + "soft/start/{sn}/{appId}")
+    Call<StartRound> startDeviceLog(@Path("sn") String sn, @Path("appId") String appId);
+
+    /**
+     * 结束设备软件使用记录
+     */
+    @POST("pad/" + "soft/end/{id}")
+    Call<BaseBean<String>> endDeviceLog(@Path("id") String appId);
 
 
 }

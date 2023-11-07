@@ -1,6 +1,7 @@
 package com.hx.infusionchairplateproject.ui
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -19,10 +20,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -41,7 +44,9 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import coil.size.Scale
 import com.hx.infusionchairplateproject.BaseActivity
+import com.hx.infusionchairplateproject.EntiretyApplication
 import com.hx.infusionchairplateproject.R
+import com.hx.infusionchairplateproject.tools.SPTool
 import com.hx.infusionchairplateproject.viewmodel.AllAppViewModel
 import com.hx.infusionchairplateproject.viewmodel.AppInfo
 
@@ -96,14 +101,28 @@ class AllAppActivity : BaseActivity() {
         allAppViewModel.initApk()
     }
 
+    override fun onResume() {
+        super.onResume()
+        val startRecordAppId = SPTool.getString("startRecordAppId")
+        if (startRecordAppId != ""){
+            allAppViewModel.endDeviceLog(startRecordAppId)
+        }
+    }
+
     @Composable
     fun ThreeButton(selectedOption: MutableState<String>) {
+
+        val videoApkList by allAppViewModel.videoApkList.collectAsState()
+        val gameApkList by allAppViewModel.gameApkList.collectAsState()
+        val paintApkList by allAppViewModel.paintApkList.collectAsState()
 
         CustomRadioButton(
             selected = selectedOption.value == "video",
             onClick = {
                 selectedOption.value = "video"
-                allAppViewModel.getPadApkList("视频")
+                if (videoApkList.all { it.progress == (-1).toLong() }) {
+                    allAppViewModel.getPadApkList("视频")
+                }
             },
             unselectedImage = R.mipmap.llm_video_img_default,
             selectedImage = R.mipmap.llm_video_img
@@ -114,7 +133,9 @@ class AllAppActivity : BaseActivity() {
             selected = selectedOption.value == "game",
             onClick = {
                 selectedOption.value = "game"
-                allAppViewModel.getPadApkList("游戏")
+                if (gameApkList.all { it.progress == (-1).toLong() }) {
+                    allAppViewModel.getPadApkList("游戏")
+                }
             },
             unselectedImage = R.mipmap.llm_game_img_default,
             selectedImage = R.mipmap.llm_game_img
@@ -125,7 +146,9 @@ class AllAppActivity : BaseActivity() {
             selected = selectedOption.value == "paint",
             onClick = {
                 selectedOption.value = "paint"
-                allAppViewModel.getPadApkList("绘画")
+                if (paintApkList.all { it.progress == (-1).toLong() }) {
+                    allAppViewModel.getPadApkList("绘画")
+                }
             },
             unselectedImage = R.mipmap.llm_painting_img_default,
             selectedImage = R.mipmap.llm_painting_img
@@ -188,48 +211,85 @@ class AllAppActivity : BaseActivity() {
         val context = LocalContext.current
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
+        if (appList.isEmpty()) {
+            Text(text = "暂无app,敬请期待~")
+            return
+        }
+
         LazyVerticalGrid(
             modifier = Modifier.height(300.dp),
             columns = GridCells.Fixed(5),
             contentPadding = PaddingValues(20.dp),
             content = {
                 items(appList.size) { item ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier
-                        .padding(bottom = 40.dp)
-                        .clickable(
-                            onClick = {
-                                audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK)
-                                // click app  TODO APP点击后的处理逻辑
-                            },
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        )) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier
+                            .padding(bottom = 40.dp)
+                            .clickable(
+                                enabled = appList[item].progress == (-1).toLong(),
+                                onClick = {
+                                    audioManager.playSoundEffect(AudioManager.FX_KEY_CLICK)
+                                    // open activity
+                                    val packageManager = context.packageManager
+                                    try {
+                                        val intent = packageManager.getLaunchIntentForPackage(appList[item].packageName)
+                                        if (intent != null) {
+                                            context.startActivity(intent)
+                                            allAppViewModel.startDeviceLog((application as EntiretyApplication).getSnAddress(), appList[item].id)
+                                        }
+                                    } catch (e: PackageManager.NameNotFoundException) {
+                                        // app in not found ,start download app
+                                        allAppViewModel.downLoadApk(appList[item].url)
+                                    }
+                                },
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            )
+                    ) {
 
                         val retryCount = remember { mutableStateOf(0) }
                         val maxRetries = 3      // reconnect count
 
-                        AsyncImage(
-                            model = ImageRequest
-                                .Builder(LocalContext.current)
-                                .data(appList[item].icon)
-                                .scale(Scale.FILL)
-                                .placeholder(R.mipmap.shibai)
-                                .error(R.mipmap.shibai)
-                                .listener(
-                                    onError = { _, _ ->
-                                        if (retryCount.value < maxRetries) {
-                                            retryCount.value++
-                                        }
-                                    })
-                                .build(),
-                            contentDescription = "APP icon",
-                            modifier = Modifier
-                                .height(70.dp)
-                                .width(70.dp)
-                                .clip(RoundedCornerShape(10.dp)),
-                            contentScale = ContentScale.FillBounds
-                        )
-                        Text(text = appList[item].name, modifier = Modifier.padding(top = 5.dp))
+                        val text = if (appList[item].progress in 0..99) {
+                            "正在下载-${appList[item].progress}%"
+                        } else if (appList[item].progress == 100.toLong()) {
+                            "正在安装..."
+                        } else {
+                            appList[item].name
+                        }
+
+                        Box {
+                            AsyncImage(
+                                model = ImageRequest
+                                    .Builder(LocalContext.current)
+                                    .data(appList[item].icon)
+                                    .scale(Scale.FILL)
+                                    .placeholder(R.mipmap.shibai)
+                                    .error(R.mipmap.shibai)
+                                    .listener(
+                                        onError = { _, _ ->
+                                            if (retryCount.value < maxRetries) {
+                                                retryCount.value++
+                                            }
+                                        })
+                                    .build(),
+                                contentDescription = "APP icon",
+                                modifier = Modifier
+                                    .height(70.dp)
+                                    .width(70.dp)
+                                    .clip(RoundedCornerShape(10.dp)),
+                                contentScale = ContentScale.FillBounds
+                            )
+                            if (appList[item].progress != (-1).toLong()) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .padding(start = 10.dp, top = 10.dp),
+                                    strokeWidth = 10.dp,
+                                )
+                            }
+                        }
+                        Text(text = text, modifier = Modifier.padding(top = 5.dp))
                     }
                 }
             }
