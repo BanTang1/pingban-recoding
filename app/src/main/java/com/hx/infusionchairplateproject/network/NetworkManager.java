@@ -2,6 +2,7 @@ package com.hx.infusionchairplateproject.network;
 
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -81,7 +82,6 @@ public class NetworkManager {
             try {
                 return chain.proceed(chain.request());
             } catch (IOException e) {
-                Toaster.showShort("网络异常，请稍后再试");
                 throw e;
             } finally {
                 hideLoading();

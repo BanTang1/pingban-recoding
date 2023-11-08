@@ -48,7 +48,7 @@ class EntiretyApplication : Application() {
         lateinit var context: Context
     }
 
-    private var debug: Boolean = false
+    private var debug: Boolean = true
 
     private lateinit var snAddress: String
     private lateinit var socketViewModel: SocketViewModel
@@ -194,11 +194,13 @@ class EntiretyApplication : Application() {
                     5 -> {
                         val showtime: Int = other.toInt()
                         SPTool.putLong("unlockTime", System.currentTimeMillis() + showtime * 1000L * 60)
-                        if (showtime > 0 && !GeneralUtil.isActivityTop(this@EntiretyApplication, AllAppActivity::class.java)) {
-                            val intent = Intent(this@EntiretyApplication, AllAppActivity::class.java)
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            startActivity(intent)
-                            send(getOnMessageWriteBack("UNLOCK"))
+                        if (showtime > 0) {
+                            if (!GeneralUtil.isActivityTop(this@EntiretyApplication, AllAppActivity::class.java)) {
+                                val intent = Intent(this@EntiretyApplication, AllAppActivity::class.java)
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                startActivity(intent)
+                                send(getOnMessageWriteBack("UNLOCK"))
+                            }
                         } else {
                             if (!GeneralUtil.isActivityTop(this@EntiretyApplication, LockScreenActivity::class.java)) {
                                 val intent = Intent(this@EntiretyApplication, LockScreenActivity::class.java)

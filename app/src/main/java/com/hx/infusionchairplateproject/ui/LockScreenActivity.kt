@@ -61,6 +61,8 @@ import com.hx.infusionchairplateproject.tools.GeneralUtil
 import com.hx.infusionchairplateproject.tools.SPTool
 import com.hx.infusionchairplateproject.viewmodel.LockViewModel
 import com.hx.infusionchairplateproject.viewmodel.SocketViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -152,10 +154,15 @@ class LockScreenActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        val unlockTime: Long = SPTool.getLong("unlockTime")
-        if (System.currentTimeMillis() < unlockTime) {
-            // 时间内
-            startActivity(Intent(this,AllAppActivity::class.java))
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(3000L)
+            if (!GeneralUtil.isActivityTop(this@LockScreenActivity,AllAppActivity::class.java)){
+                val unlockTime: Long = SPTool.getLong("unlockTime")
+                if (System.currentTimeMillis() < unlockTime) {
+                    // 时间内
+                    startActivity(Intent(this@LockScreenActivity,AllAppActivity::class.java))
+                }
+            }
         }
     }
 
