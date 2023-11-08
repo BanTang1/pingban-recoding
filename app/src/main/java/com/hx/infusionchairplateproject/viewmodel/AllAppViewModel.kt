@@ -28,7 +28,7 @@ import java.io.File
 class AllAppViewModel : ViewModel() {
 
     private val TAG: String = "liudehua_AllAppViewModel"
-    private var debug: Boolean = true
+    private var debug: Boolean = false
 
     private val viewModelJob = Job()
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
@@ -331,6 +331,7 @@ class AllAppViewModel : ViewModel() {
             }
 
             override fun onSuccess(url: String, l: Long) {
+                updateDownloadProgress(url, 100)
                 // start install app
                 installApp(url)
             }

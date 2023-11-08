@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.DrawableRes
@@ -57,7 +58,7 @@ import com.hx.infusionchairplateproject.viewmodel.AppInfo
 class AllAppActivity : BaseActivity() {
 
     private val TAG: String = "liudehua_AllAppActivity"
-    private val debug: Boolean = true
+    private val debug: Boolean = false
 
     private val allAppViewModel: AllAppViewModel by viewModels()
 
