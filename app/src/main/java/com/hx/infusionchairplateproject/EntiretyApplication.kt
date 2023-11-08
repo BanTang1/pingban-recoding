@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import com.hjq.toast.Toaster
 import com.hx.infusionchairplateproject.databeen.AndroidVersion
+import com.hx.infusionchairplateproject.network.DownloadMgr
 import com.hx.infusionchairplateproject.network.NetworkManager
 import com.hx.infusionchairplateproject.tools.CommandTool
 import com.hx.infusionchairplateproject.tools.GeneralUtil
@@ -484,8 +485,7 @@ class EntiretyApplication : Application() {
                     if (debug) Log.d(TAG, "onResponse: 小于最低版本,开始更新")
                     client.send("UPDATE_YES")
                     Toaster.showShort("小于最低版本,开始更新")
-                    // TODO  下载文件到指定路径 待实现  /storage/emulated/0/hxAndroidV
-
+                    downLoadLockApp(versionInfo.data.url)
                 }
 
                 override fun onFailure(call: Call<AndroidVersion>, t: Throwable) {
@@ -494,6 +494,17 @@ class EntiretyApplication : Application() {
 
             })
         }
+    }
+
+    /**
+     * 锁屏软件更新
+     */
+    private fun downLoadLockApp(url:String) {
+        DownloadMgr.getInstance().addTask(url,"/sdcard/hxAndroidV/${url.substringAfterLast("/")}",object :DownloadMgr.Callback(){
+            override fun onSuccess(url: String, l: Long) {
+                CommandTool.execSuCMD("pm install -r /sdcard/hxAndroidV/${url.substringAfterLast("/")}")
+            }
+        })
     }
 
 }

@@ -81,14 +81,14 @@ class AllAppViewModel : ViewModel() {
     fun startDeviceLog(sn: String, appId: String) {
         uiScope.launch {
             withContext(Dispatchers.IO) {
-                val startLog = NetworkManager.getInstance().requestApi.startDeviceLog(sn,appId)
-                startLog.enqueue(object : Callback<StartRound>{
+                val startLog = NetworkManager.getInstance().requestApi.startDeviceLog(sn, appId)
+                startLog.enqueue(object : Callback<StartRound> {
                     override fun onResponse(call: Call<StartRound>, response: Response<StartRound>) {
                         if (!response.isSuccessful) {
                             if (debug) Log.d(TAG, "onResponse: 三方App使用记录-开始 响应异常")
                             return
                         }
-                        if (response.code() != 200){
+                        if (response.code() != 200) {
                             if (debug) Log.d(TAG, "onResponse: 三方App使用记录-开始响应码异常 Code = ${response.code()}")
                             return
                         }
@@ -104,7 +104,7 @@ class AllAppViewModel : ViewModel() {
 
                         // 标志： 成功
 
-                        SPTool.putString("startRecordAppId",startRound.data.id)
+                        SPTool.putString("startRecordAppId", startRound.data.id)
                     }
 
                     override fun onFailure(call: Call<StartRound>, t: Throwable) {
@@ -123,13 +123,13 @@ class AllAppViewModel : ViewModel() {
         uiScope.launch {
             withContext(Dispatchers.IO) {
                 val endLog = NetworkManager.getInstance().requestApi.endDeviceLog(appId)
-                endLog.enqueue(object : Callback<BaseBean<String>>{
+                endLog.enqueue(object : Callback<BaseBean<String>> {
                     override fun onResponse(call: Call<BaseBean<String>>, response: Response<BaseBean<String>>) {
                         if (!response.isSuccessful) {
                             if (debug) Log.d(TAG, "onResponse: 三方App使用记录-结束 响应异常")
                             return
                         }
-                        if (response.code() != 200){
+                        if (response.code() != 200) {
                             if (debug) Log.d(TAG, "onResponse: 三方App使用记录-结束 响应码异常 Code = ${response.code()}")
                             return
                         }
@@ -145,12 +145,12 @@ class AllAppViewModel : ViewModel() {
 
                         // 标志 ： 成功
 
-                        SPTool.putString("startRecordAppId","")
+                        SPTool.putString("startRecordAppId", "")
                     }
 
                     override fun onFailure(call: Call<BaseBean<String>>, t: Throwable) {
                         if (debug) Log.d(TAG, "onFailure: t = $t")
-                        SPTool.putString("startRecordAppId","")
+                        SPTool.putString("startRecordAppId", "")
                     }
 
                 })
@@ -347,10 +347,8 @@ class AllAppViewModel : ViewModel() {
      * url 中包含文件名
      */
     private fun installApp(url: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            CommandTool.execSuCMD("pm install -r /sdcard/TripartiteApp/${url.substringAfterLast("/")}")
-            updateDownloadProgress(url, (-1).toLong())
-        }
+        CommandTool.execSuCMD("pm install -r /sdcard/TripartiteApp/${url.substringAfterLast("/")}")
+        updateDownloadProgress(url, (-1).toLong())
     }
 
 
