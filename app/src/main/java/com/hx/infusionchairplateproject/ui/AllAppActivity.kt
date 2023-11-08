@@ -66,34 +66,35 @@ class AllAppActivity : BaseActivity() {
 
         setContent {
             Box(modifier = Modifier.fillMaxSize()) {
-                // Background
-                Image(painterResource(id = R.mipmap.llm_all_app_bg), contentDescription = "背景")
-                Row(modifier = Modifier.fillMaxSize()) {
+                    // Background
+                    Image(painterResource(id = R.mipmap.llm_all_app_bg), contentDescription = "背景")
+                    Row(modifier = Modifier.fillMaxSize()) {
 
-                    val selectedOption = remember { mutableStateOf("video") }
+                        val selectedOption = remember { mutableStateOf("video") }
 
-                    // left button
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(270.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        ThreeButton(selectedOption)
+                        // left button
+                        Column(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .width(270.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            ThreeButton(selectedOption)
+                        }
+
+                        // right apps
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .weight(1f), contentAlignment = Alignment.Center
+                        ) {
+                            AllApps(selectedOption)
+                        }
+                        Spacer(modifier = Modifier.width(80.dp))
                     }
-
-                    // right apps
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .weight(1f), contentAlignment = Alignment.Center
-                    ) {
-                        AllApps(selectedOption)
-                    }
-                    Spacer(modifier = Modifier.width(80.dp))
                 }
-            }
+            BaseContent()
         }
 
 

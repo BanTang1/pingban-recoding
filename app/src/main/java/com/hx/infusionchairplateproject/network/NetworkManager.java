@@ -1,11 +1,20 @@
 package com.hx.infusionchairplateproject.network;
 
-import org.java_websocket.client.WebSocketClient;
-import org.java_websocket.handshake.ServerHandshake;
+import android.os.Handler;
+import android.os.Message;
 
-import okhttp3.WebSocket;
+import androidx.annotation.NonNull;
+
+import com.hjq.toast.Toaster;
+import com.hx.infusionchairplateproject.BaseActivity;
+
+import java.io.IOException;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import okhttp3.Interceptor;
 
 /**
  * 管理网络请求
@@ -18,8 +27,8 @@ public class NetworkManager {
     /**
      * 数据请求服务器
      */
-    private final String Retrofit_URL =  "http://shuyeyi.dev.hxyihu.com/server/";       // 正式服
-//    private final String Retrofit_URL =  "http://shuyeyi-test.dev.hxyihu.com/server/";  // 测试服
+    private final String RETROFIT_URL =  "http://shuyeyi.dev.hxyihu.com/server/";       // 正式服
+//    private final String RETROFIT_URL =  "http://shuyeyi-test.dev.hxyihu.com/server/";  // 测试服
 
     /**
      * WebSocket 服务器
@@ -29,9 +38,13 @@ public class NetworkManager {
 
     private NetworkManager() {
         if (retrofit == null) {
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .addInterceptor(new LoadingInterceptor())
+                    .build();
             retrofit = new Retrofit.Builder()
-                    .baseUrl(Retrofit_URL)
+                    .baseUrl(RETROFIT_URL)
                     .addConverterFactory(GsonConverterFactory.create())
+                    .client(client)
                     .build();
         }
         if (requestApi == null) {
@@ -54,6 +67,36 @@ public class NetworkManager {
     public RequestApi getRequestApi(){
         return requestApi;
     }
+
+
+    /**
+     * 网络拦截器
+     */
+    public static class LoadingInterceptor implements Interceptor {
+        private Handler handler = BaseActivity.Companion.getHandler();
+        @NonNull
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            showLoading();
+            try {
+                return chain.proceed(chain.request());
+            } catch (IOException e) {
+                Toaster.showShort("网络异常，请稍后再试");
+                throw e;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        private void showLoading() {
+            handler.sendEmptyMessage(1);
+        }
+
+        private void hideLoading() {
+            handler.sendEmptyMessage(0);
+        }
+    }
+
 
 
 }

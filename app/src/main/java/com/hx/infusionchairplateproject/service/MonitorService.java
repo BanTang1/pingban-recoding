@@ -50,7 +50,7 @@ public class MonitorService extends Service {
             if (GeneralUtil.Companion.isActivityTop(getApplicationContext(), LockScreenActivity.class)) {
                 return;
             }
-            // 排除WIFI界面
+            // TODO 排除WIFI界面
 //            if (GeneralUtil.Companion.isActivityTop(getApplicationContext(),WIFI 界面)) {
 //                return;
 //            }

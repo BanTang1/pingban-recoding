@@ -90,50 +90,51 @@ class LockScreenActivity : BaseActivity() {
 
         setContent {
             Box(modifier = Modifier.fillMaxSize()) {
-                // Background
-                Image(painterResource(id = R.mipmap.llm3), contentDescription = "背景")
-                Row (modifier = Modifier.fillMaxSize()){
+                    // Background
+                    Image(painterResource(id = R.mipmap.llm3), contentDescription = "背景")
+                    Row (modifier = Modifier.fillMaxSize()){
 
-                    // left
-                    Column(modifier = Modifier
-                        .fillMaxHeight()
-                        .width(214.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(modifier = Modifier.height(114.dp))
-                        // 二维码
-                        TwoDimensionalCode()
-                        Spacer(modifier = Modifier.height(100.dp))
-                        // 套餐信息
-                        Column(modifier = Modifier.weight(1f)) {
-                            PriceInformation()
+                        // left
+                        Column(modifier = Modifier
+                            .fillMaxHeight()
+                            .width(214.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(modifier = Modifier.height(114.dp))
+                            // 二维码
+                            TwoDimensionalCode()
+                            Spacer(modifier = Modifier.height(100.dp))
+                            // 套餐信息
+                            Column(modifier = Modifier.weight(1f)) {
+                                PriceInformation()
+                            }
+                        }
+
+                        // right banner
+                        Box(modifier = Modifier.fillMaxSize()){
+                            Banner()
+                            Column(modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(bottom = 50.dp, end = 30.dp)) {
+                                ShowPromptMessage()
+                            }
+
+                            Column(modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(bottom = 50.dp, end = 220.dp)) {
+                                Image(
+                                    painterResource(id = R.mipmap.xiongmao),
+                                    contentDescription = "熊猫LOGO",
+                                    modifier = Modifier
+                                        .width(100.dp)
+                                        .height(100.dp)
+                                )
+                            }
                         }
                     }
 
-                    // right banner
-                    Box(modifier = Modifier.fillMaxSize()){
-                        Banner()
-                        Column(modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(bottom = 50.dp, end = 30.dp)) {
-                            ShowPromptMessage()
-                        }
-
-                        Column(modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(bottom = 50.dp, end = 220.dp)) {
-                            Image(
-                                painterResource(id = R.mipmap.xiongmao),
-                                contentDescription = "熊猫LOGO",
-                                modifier = Modifier
-                                    .width(100.dp)
-                                    .height(100.dp)
-                            )
-                        }
-                    }
+                    // 设备投放状态
+                    checkDeviceState()
                 }
-
-                // 设备投放状态
-                checkDeviceState()
-            }
+            BaseContent()
         }
 
         snAddress = (application as EntiretyApplication).getSnAddress()

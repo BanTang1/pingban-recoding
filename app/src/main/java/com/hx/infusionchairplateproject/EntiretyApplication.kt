@@ -290,7 +290,6 @@ class EntiretyApplication : Application() {
             override fun onClose(code: Int, reason: String?, remote: Boolean) {
                 if (debug) Log.d(TAG, "onClose: 连接关闭 --> code=$code  reason=$reason  remote=$remote")
                 isConnected = false
-                GeneralUtil.writeToFile("WebSocket is disconnect")
                 realReconnect()
             }
 
