@@ -7,10 +7,13 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.os.Environment
 import android.provider.Settings
 import android.util.Log
 import androidx.lifecycle.ViewModelProvider
+import cn.wch.uartlib.WCHUARTManager
 import com.hjq.toast.Toaster
+import com.hx.infusionchairplateproject.ch340.CH34xManager
 import com.hx.infusionchairplateproject.databeen.AndroidVersion
 import com.hx.infusionchairplateproject.network.DownloadMgr
 import com.hx.infusionchairplateproject.network.NetworkManager
@@ -33,6 +36,7 @@ import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.File
 import java.net.URI
 
 
@@ -50,6 +54,8 @@ class EntiretyApplication : Application() {
     private lateinit var socketViewModel: SocketViewModel
     private lateinit var client: WebSocketClient
     private var isConnected = false
+
+    private var ch34xManager: CH34xManager? = null
 
     private val appPkgList = mutableListOf<String>()
 
@@ -71,6 +77,10 @@ class EntiretyApplication : Application() {
 
         realReconnect()
         startHeartbeat()
+
+        // 初始化 CH340驱动
+        WCHUARTManager.getInstance().init(this)
+        ch34xManager = CH34xManager.getCH34xManager()
     }
 
     private fun initAppPkgList() {
@@ -238,7 +248,7 @@ class EntiretyApplication : Application() {
                     }
 
                     12 -> {
-                        // TODO 三方应用升级 初步想法：直接从服务器中重新下载安装所有的三方App
+                        //无需实现，三方应用只需要在后台上架下载即可，在进入三方App页面的时候会自动同步服务最新的App信息
                     }
 
                     13 -> {
@@ -250,15 +260,33 @@ class EntiretyApplication : Application() {
                     }
 
                     15 -> {
-                        // TODO   打开充电线    实际功能后续实现， SDK 以及  管理类（/ch340）已经移植
+                        if (ch34xManager?.isUSBConnect != true) {
+                            send(getOnMessageWriteBack("CHARGE_USB_DISABLE"))
+                            return
+                        }
+                        val usbChargeTime = other.toLong()
+                        SPTool.putLong("usb_time", System.currentTimeMillis() + usbChargeTime * 1000L * 60)
+                        ch34xManager?.sendOpen()
+                        ch340StateFeedback("open")
                     }
 
                     16 -> {
-                        // TODO 关闭充电线  实际功能后续实现， SDK 以及  管理类（/ch340）已经移植
+                        if (ch34xManager?.isUSBConnect != true) {
+                            send(getOnMessageWriteBack("CHARGE_USB_DISABLE"))
+                            return
+                        }
+                        SPTool.putLong("usb_time", 0)
+                        ch34xManager?.sendClose()
+                        ch340StateFeedback("close")
                     }
 
                     17 -> {
-                        // TODO 查看充电线状态(打卡/关闭)  实际功能后续实现， SDK 以及  管理类（/ch340）已经移植
+                        if (ch34xManager?.isUSBConnect != true) {
+                            send(getOnMessageWriteBack("CHARGE_USB_DISABLE"))
+                            return
+                        }
+                        ch34xManager?.sendState()
+                        ch340StateFeedback("state")
                     }
 
                     18 -> {
@@ -328,7 +356,7 @@ class EntiretyApplication : Application() {
     }
 
     /**
-     * 1.获取非系统应用报名
+     * 1.获取非系统应用包名
      * 2.排除我们自己的三方app的包名
      * 3.卸载与我们无关的三方app
      */
@@ -485,6 +513,12 @@ class EntiretyApplication : Application() {
                     if (debug) Log.d(TAG, "onResponse: 小于最低版本,开始更新")
                     client.send("UPDATE_YES")
                     Toaster.showShort("小于最低版本,开始更新")
+
+                    // first delete file, then real update
+                    val file = File(Environment.getExternalStorageDirectory().path + "/hxAndroidV")
+                    if (file.exists()) {
+                        file.deleteRecursively()
+                    }
                     downLoadLockApp(versionInfo.data.url)
                 }
 
@@ -505,6 +539,44 @@ class EntiretyApplication : Application() {
                 CommandTool.execSuCMD("pm install -r /sdcard/hxAndroidV/${url.substringAfterLast("/")}")
             }
         })
+    }
+
+    /**
+     * CH340状态反馈
+     */
+    private fun ch340StateFeedback(type:String) {
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(1000L)
+            val result = ch34xManager!!.checkResult()
+            when(type) {
+                "open" -> {
+                    if (result.equals("open")){
+                        client.send(getOnMessageWriteBack("CHARGE_OPEN"))
+                    } else {
+                        client.send(getOnMessageWriteBack("CHARGE_ERROR"))
+                    }
+                }
+
+                "close" -> {
+                    if (result.equals("close")){
+                        client.send(getOnMessageWriteBack("CHARGE_CLOSE"))
+                    } else {
+                        client.send(getOnMessageWriteBack("CHARGE_ERROR"))
+                    }
+                }
+
+                "state" -> {
+                    if (result.equals("state is open")){
+                        client.send(getOnMessageWriteBack("CHARGE_STATE_OPEN"))
+                    } else if (result.equals("state is close")){
+                        client.send(getOnMessageWriteBack("CHARGE_STATE_CLOSE"))
+                    } else {
+                        client.send(getOnMessageWriteBack("CHARGE_STATE_UNKNOW"))
+                    }
+                }
+
+            }
+        }
     }
 
 }

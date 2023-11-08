@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.hx.infusionchairplateproject.R;
+import com.hx.infusionchairplateproject.ch340.CH34xManager;
 import com.hx.infusionchairplateproject.tools.GeneralUtil;
 import com.hx.infusionchairplateproject.tools.SPTool;
 import com.hx.infusionchairplateproject.ui.LockScreenActivity;
@@ -35,10 +36,9 @@ public class MonitorService extends Service {
     // 锁屏时间计时器
     private final Timer unlockTimetimer = new Timer();
     // USB C340 时间计时器
-    private final Timer USBTimeTimer = new Timer();
+    private final Timer ch340TimeTimer = new Timer();
 
     private final TimerTask unlockTimerTask = new TimerTask() {
-
         @Override
         public void run() {
             long unlockTime = SPTool.getLong("unlockTime");
@@ -62,6 +62,16 @@ public class MonitorService extends Service {
 
         }
     };
+    private final TimerTask ch340TimerTask = new TimerTask() {
+
+        @Override
+        public void run() {
+            long time = SPTool.getLong("usb_time");
+            if (System.currentTimeMillis() >= time) {
+                CH34xManager.getCH34xManager().sendClose();
+            }
+        }
+    };
 
 
     @Nullable
@@ -77,6 +87,7 @@ public class MonitorService extends Service {
             isInit = true;
             real_startForegroundService();
             unlockTimetimer.schedule(unlockTimerTask, 0, 2000);
+            ch340TimeTimer.schedule(ch340TimerTask, 0, 2000);
         }
     }
 

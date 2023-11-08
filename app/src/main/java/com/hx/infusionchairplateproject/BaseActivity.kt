@@ -26,6 +26,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.hx.infusionchairplateproject.ch340.CH34xManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 /**
@@ -85,6 +89,18 @@ open class BaseActivity : AppCompatActivity() {
             else -> {}
         }
         return super.onKeyDown(keyCode, event)
+    }
+
+    /**
+     * 打开CH340
+     */
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            CoroutineScope(Dispatchers.IO).launch {
+                CH34xManager.getCH34xManager().openDevices()
+            }
+        }
     }
 
 }
