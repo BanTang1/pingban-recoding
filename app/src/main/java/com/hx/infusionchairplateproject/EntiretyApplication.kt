@@ -12,7 +12,9 @@ import android.provider.Settings
 import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import cn.wch.uartlib.WCHUARTManager
+import com.hjq.toast.ToastParams
 import com.hjq.toast.Toaster
+import com.hjq.toast.style.CustomToastStyle
 import com.hx.infusionchairplateproject.ch340.CH34xManager
 import com.hx.infusionchairplateproject.databeen.AndroidVersion
 import com.hx.infusionchairplateproject.network.DownloadMgr
@@ -81,6 +83,24 @@ class EntiretyApplication : Application() {
         // 初始化 CH340驱动
         WCHUARTManager.getInstance().init(this)
         ch34xManager = CH34xManager.getCH34xManager()
+
+        // 服务器连接网络状态监测
+        serverNetworkDetection()
+    }
+
+    private fun serverNetworkDetection() {
+        CoroutineScope(Dispatchers.IO).launch {
+            while (isActive) {
+                delay(5000L)
+                if (!isConnected){
+                    // TODO Wifi界面不显示
+                    val params = ToastParams()
+                    params.text = "与服务器断开连接，请检查网络状态！"
+                    params.style = CustomToastStyle(R.layout.toast_error);
+                    Toaster.show(params)
+                }
+            }
+        }
     }
 
     private fun initAppPkgList() {
