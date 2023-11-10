@@ -28,10 +28,7 @@ class LauncherActivity : BaseActivity() {
         wifiManager = applicationContext.getSystemService(WIFI_SERVICE) as WifiManager
         Handler(Looper.myLooper()!!).postDelayed(Runnable {
             if (!GeneralUtil.isNetWorkConnected(this@LauncherActivity)) {
-                // TODO 假设网络已经连接上了; 实际需跳转自身的Wifi界面，暂未实现
-//                startActivity(Intent(Settings.ACTION_WIFI_SETTINGS))
-//                finish()
-                startActivity(Intent(this@LauncherActivity, LockScreenActivity::class.java))
+                startActivity(Intent(this, WifiSettingActivity::class.java))
                 finish()
             } else {
                 startActivity(Intent(this@LauncherActivity, LockScreenActivity::class.java))

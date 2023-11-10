@@ -21,6 +21,7 @@ import com.hx.infusionchairplateproject.ch340.CH34xManager;
 import com.hx.infusionchairplateproject.tools.GeneralUtil;
 import com.hx.infusionchairplateproject.tools.SPTool;
 import com.hx.infusionchairplateproject.ui.LockScreenActivity;
+import com.hx.infusionchairplateproject.ui.WifiSettingActivity;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -51,10 +52,10 @@ public class MonitorService extends Service {
             if (GeneralUtil.Companion.isActivityTop(getApplicationContext(), LockScreenActivity.class)) {
                 return;
             }
-            // TODO 排除WIFI界面
-//            if (GeneralUtil.Companion.isActivityTop(getApplicationContext(),WIFI 界面)) {
-//                return;
-//            }
+
+            if (GeneralUtil.Companion.isActivityTop(getApplicationContext(), WifiSettingActivity.class)) {
+                return;
+            }
 
             // 锁屏
             Intent intent = new Intent(MonitorService.this, LockScreenActivity.class);

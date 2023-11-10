@@ -134,6 +134,12 @@
             android:launchMode="singleTask"
             android:screenOrientation="landscape" />
 
+        <activity android:name=".ui.WifiSettingActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:screenOrientation="landscape"/>
+
         <service
             android:name=".service.MonitorService"
             android:enabled="true"

@@ -24,6 +24,7 @@ import com.hx.infusionchairplateproject.tools.GeneralUtil
 import com.hx.infusionchairplateproject.tools.SPTool
 import com.hx.infusionchairplateproject.ui.AllAppActivity
 import com.hx.infusionchairplateproject.ui.LockScreenActivity
+import com.hx.infusionchairplateproject.ui.WifiSettingActivity
 import com.hx.infusionchairplateproject.viewmodel.SocketViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -45,12 +46,11 @@ import java.net.URI
 class EntiretyApplication : Application() {
 
     private val TAG = "liudehua_EntiretyApplication"
+    private var debug: Boolean = false
 
     companion object {
         lateinit var context: Context
     }
-
-    private var debug: Boolean = true
 
     private lateinit var snAddress: String
     private lateinit var socketViewModel: SocketViewModel
@@ -91,9 +91,11 @@ class EntiretyApplication : Application() {
     private fun serverNetworkDetection() {
         CoroutineScope(Dispatchers.IO).launch {
             while (isActive) {
-                delay(5000L)
                 if (!isConnected){
-                    // TODO Wifi界面不显示
+                    delay(5000L)
+                    if (GeneralUtil.isActivityTop(this@EntiretyApplication,WifiSettingActivity::class.java)){
+                        continue
+                    }
                     val params = ToastParams()
                     params.text = "与服务器断开连接，请检查网络状态！"
                     params.style = CustomToastStyle(R.layout.toast_error);

@@ -1,32 +1,28 @@
 package com.hx.infusionchairplateproject
 
-import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
-import android.util.Log
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.hx.infusionchairplateproject.ch340.CH34xManager
+import com.hx.infusionchairplateproject.ui.WifiSettingActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -101,6 +97,95 @@ open class BaseActivity : AppCompatActivity() {
                 CH34xManager.getCH34xManager().openDevices()
             }
         }
+    }
+
+
+    /**
+     * 手势跳转设置界面
+     */
+    private var startX = 0f
+    private var startY = 0f
+    private var endX = 0f
+    private var endY = 0f
+    private var firstLineDrawn = false
+    private var firstLineTime: Long = 0
+//    val handler = Handler(Looper.myLooper()!!)
+    val runnable = Runnable { //执行跳转操作
+        val intent = Intent(this@BaseActivity, WifiSettingActivity::class.java)
+        intent.putExtra("status", true)
+        startActivity(intent)
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                startX = event.x
+                startY = event.y
+                if (startX < 300 && startY < 300) {
+                    handler?.postDelayed(runnable, 5000)
+                }
+            }
+
+            MotionEvent.ACTION_UP -> {
+                handler?.removeCallbacks(runnable)
+                endX = event.x
+                endY = event.y
+
+                // 计算用户抬起手指时的坐标与按下时的坐标差
+                val deltaX = endX - startX
+                val deltaY = endY - startY
+
+                // 判断用户画的线是否足够长
+                if (Math.hypot(deltaX.toDouble(), deltaY.toDouble()) < 1650) {
+                    return super.onTouchEvent(event)
+                }
+
+                // 判断用户画的线的斜率是否接近 1 或 -1
+                val slope = deltaY / deltaX
+                if (Math.abs(slope) > 0.4 && Math.abs(slope) < 1) {
+                    if (!firstLineDrawn) {
+                        // 判断第一条对角线的起点是否在屏幕左上角附近
+                        if (startX > 300 || startY > 300) {
+                            return super.onTouchEvent(event)
+                        }
+
+                        // 判断第一条对角线的终点是否在屏幕右下角附近
+                        val screenHeight = windowManager.defaultDisplay.height
+                        val screenWidth = windowManager.defaultDisplay.width
+                        if (endX < screenWidth - 300 || endY < screenHeight - 300) {
+                            return super.onTouchEvent(event)
+                        }
+                        firstLineDrawn = true
+                        firstLineTime = System.currentTimeMillis()
+                    } else {
+                        // 判断两条对角线之间的时间间隔是否超过 2 秒
+                        if (System.currentTimeMillis() - firstLineTime > 2000) {
+                            firstLineDrawn = false
+                            return super.onTouchEvent(event)
+                        }
+                        // 判断第二条对角线的起点是否在屏幕左下角附近
+                        val screenHeight = windowManager.defaultDisplay.height
+                        if (startX > 300 || startY < screenHeight - 300) {
+                            firstLineDrawn = false
+                            return super.onTouchEvent(event)
+                        }
+
+                        // 判断第二条对角线的终点是否在屏幕右上角附近
+                        val screenWidth = windowManager.defaultDisplay.width
+                        if (event.x < screenWidth - 300 || event.y > 300) {
+                            firstLineDrawn = false
+                            return super.onTouchEvent(event)
+                        }
+
+                        // 跳转到某个页面
+                        val intent = Intent(this@BaseActivity, WifiSettingActivity::class.java)
+                        intent.putExtra("status", true)
+                        startActivity(intent)
+                    }
+                }
+            }
+        }
+        return super.onTouchEvent(event)
     }
 
 }
