@@ -112,6 +112,13 @@ class AllAppActivity : BaseActivity() {
         }
     }
 
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            FloatingWindow(this).showFlow()
+        }
+    }
+
     @Composable
     fun ThreeButton(selectedOption: MutableState<String>) {
 
@@ -215,7 +222,7 @@ class AllAppActivity : BaseActivity() {
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         if (appList.isEmpty()) {
-            Text(text = "网络连接异常，请检查网络状态!", color = Color.Red)
+            Text(text = "正在加载请耐心等待~~", color = Color.Red)
             return
         }
 

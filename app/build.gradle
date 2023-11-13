@@ -78,6 +78,7 @@ dependencies {
     implementation files('libs\\tdcode-classes.jar')
     implementation files('libs\\tdcode-core-3.3.3.jar')
     implementation files('libs\\CH34XUARTDriver.jar')
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
@@ -100,7 +101,7 @@ dependencies {
 
     implementation 'com.github.getActivity:Toaster:12.5'
 
-//    implementation 'com.github.princekin-f:EasyFloat:2.0.3' // 悬浮窗
+    implementation 'com.github.princekin-f:EasyFloat:2.0.3' // 悬浮窗
 
 
 }
