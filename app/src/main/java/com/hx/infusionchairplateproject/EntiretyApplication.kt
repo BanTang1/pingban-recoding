@@ -276,11 +276,20 @@ class EntiretyApplication : Application() {
                     }
 
                     13 -> {
-                        // TODO 进入WIFI 界面  WIFI 界面待实现
+                        if (!GeneralUtil.isActivityTop(this@EntiretyApplication,WifiSettingActivity::class.java)){
+                            val intent = Intent(this@EntiretyApplication,WifiSettingActivity::class.java)
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            intent.putExtra("status", true)
+                            startActivity(intent)
+                            send(getOnMessageWriteBack("ENTER_WIFI"))
+                        }
                     }
 
                     14 -> {
-                        //TODO 退出WIFI 界面，  WIFI界面待实现
+                        if (GeneralUtil.isActivityTop(this@EntiretyApplication,WifiSettingActivity::class.java)){
+                            ActivityTask.finishOneActivity(WifiSettingActivity::class.java.name)
+                            send(getOnMessageWriteBack("QUIT_WIFI"))
+                        }
                     }
 
                     15 -> {

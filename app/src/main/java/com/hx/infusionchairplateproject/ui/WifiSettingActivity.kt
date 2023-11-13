@@ -8,9 +8,10 @@ import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiConfiguration
-import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
@@ -66,7 +67,7 @@ import com.hx.infusionchairplateproject.tools.GeneralUtil
 class WifiSettingActivity : BaseActivity() {
 
     private val TAG = "liudehua_WifiSettingActivity"
-    private var debug: Boolean = true
+    private var debug: Boolean = false
 
     private lateinit var status:String
 
@@ -141,12 +142,33 @@ class WifiSettingActivity : BaseActivity() {
         }
     }
 
+    // 由LauncherActivity跳转过来需要在网络连接后自动跳转至锁屏界面
+    val mHandler = Handler(Looper.myLooper()!!)
+    val r: Runnable = object : Runnable {
+        override fun run() {
+            if (GeneralUtil.isNetWorkConnected(this@WifiSettingActivity)) {
+                startActivity(Intent(this@WifiSettingActivity, LockScreenActivity::class.java))
+                finish()
+                return
+            }
+            mHandler.postDelayed(this, 3000)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         wifiManager = getSystemService(Context.WIFI_SERVICE) as WifiManager
         connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         wifiSwitchState.value = wifiManager.isWifiEnabled
+
+        val intent = intent
+        if (intent != null) {
+            val status = intent.getBooleanExtra("status", false)
+            if (!status) {
+                mHandler.postDelayed(r, 3000)
+            }
+        }
 
         setContent {
             WifiScreen()

@@ -42,11 +42,18 @@ open class BaseActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        ActivityTask.addActivity(this)
+
         handler = object : Handler(Looper.getMainLooper()) {
             override fun handleMessage(msg: Message) {
                 isShow = msg.what
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        ActivityTask.removeActivity(this)
     }
 
     @Composable
@@ -102,6 +109,7 @@ open class BaseActivity : AppCompatActivity() {
 
     /**
      * 手势跳转设置界面
+     * 目前支持 X 和 左上角长按5s
      */
     private var startX = 0f
     private var startY = 0f
@@ -109,7 +117,6 @@ open class BaseActivity : AppCompatActivity() {
     private var endY = 0f
     private var firstLineDrawn = false
     private var firstLineTime: Long = 0
-//    val handler = Handler(Looper.myLooper()!!)
     val runnable = Runnable { //执行跳转操作
         val intent = Intent(this@BaseActivity, WifiSettingActivity::class.java)
         intent.putExtra("status", true)
