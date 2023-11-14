@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiManager
@@ -69,8 +70,6 @@ class WifiSettingActivity : BaseActivity() {
     private val TAG = "liudehua_WifiSettingActivity"
     private var debug: Boolean = false
 
-    private lateinit var status:String
-
     private lateinit var wifiManager: WifiManager
     private lateinit var connectivityManager: ConnectivityManager
 
@@ -82,6 +81,9 @@ class WifiSettingActivity : BaseActivity() {
 
     // 已保存的WIFI SSID
     var savedWifiList = mutableStateListOf<WifiConfiguration>()
+
+    // Wifi 连接状态
+    var wifiConnectState = mutableStateOf("")
 
     // 接收扫描结果  监听Wifi开关状态
     val wifiScanReceiver = object : BroadcastReceiver() {
@@ -138,6 +140,30 @@ class WifiSettingActivity : BaseActivity() {
                     }
 
                 }
+
+                WifiManager.NETWORK_STATE_CHANGED_ACTION -> {
+                    val connectedWifiInfo = (context.getSystemService(WIFI_SERVICE) as WifiManager).connectionInfo
+                    val info = intent.getParcelableExtra<NetworkInfo>(WifiManager.EXTRA_NETWORK_INFO) ?: return
+                    when(info.state) {
+                        NetworkInfo.State.DISCONNECTED -> {wifiConnectState.value = "连接已断开"}
+                        NetworkInfo.State.CONNECTED -> {wifiConnectState.value = "已连接到网络：${connectedWifiInfo.ssid}"}
+                        else -> {
+                            val state = info.detailedState
+                            if (state == NetworkInfo.DetailedState.CONNECTING) {
+                                wifiConnectState.value = "连接中..."
+                            } else if (state == NetworkInfo.DetailedState.AUTHENTICATING) {
+                                wifiConnectState.value = "正在验证身份信息..."
+                            } else if (state == NetworkInfo.DetailedState.OBTAINING_IPADDR) {
+                                wifiConnectState.value = "正在获取IP地址..."
+                            } else if (state == NetworkInfo.DetailedState.FAILED) {
+                                wifiConnectState.value = "连接失败..."
+                            } else if (state == NetworkInfo.DetailedState.SUSPENDED) {
+                                wifiConnectState.value = "连接被挂起..."
+                            }
+                        }
+                    }
+
+                }
             }
         }
     }
@@ -180,6 +206,7 @@ class WifiSettingActivity : BaseActivity() {
         val intentFilter = IntentFilter()
         intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
         intentFilter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION)
+        intentFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION)
         registerReceiver(wifiScanReceiver, intentFilter)
     }
 
@@ -226,7 +253,7 @@ class WifiSettingActivity : BaseActivity() {
                     }
                 )
             }
-            Text(text = "已连接到WIFIXXXX", modifier = Modifier.align(Alignment.CenterHorizontally))
+            Text(text = wifiConnectState.value, modifier = Modifier.align(Alignment.CenterHorizontally))
 
             if (!wifiSwitchState.value) {
                 Box(modifier = Modifier.fillMaxSize()) {
