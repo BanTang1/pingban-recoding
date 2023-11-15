@@ -18,7 +18,6 @@ import android.os.CountDownTimer;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -252,13 +251,14 @@ public class FloatingWindow {
                     .setSidePattern(SidePattern.RIGHT)
                     .setLocation(getScreenWidth() - dip2px(45), dip2px(40))
                     .setAnimator(null)
-                    .setDragEnable(true)
+                    .setDragEnable(false)
                     .setMatchParent(false, false)
                     .setAnimator(new DefaultAnimator())
                     .setImmersionStatusBar(false)
                     .setDisplayHeight(new DefaultDisplayHeight())
                     .setFilter(
-                            LockScreenActivity.class
+                            LockScreenActivity.class,
+                            WifiSettingActivity.class
                     ).registerCallbacks(new OnFloatCallbacks() {
                         @Override
                         public void createdResult(boolean b, @Nullable String s, @Nullable View view) {

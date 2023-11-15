@@ -239,7 +239,7 @@ class WifiSettingActivity : BaseActivity() {
                 TextButton(onClick = {
                     val isHaveNet = GeneralUtil.isNetWorkConnected(this@WifiSettingActivity)
                     if (isHaveNet) {
-                        startActivity(Intent(this@WifiSettingActivity,LockScreenActivity::class.java))
+                        finish()
                     }
                 }) {
                     Icon(painterResource(id = R.mipmap.ic_arrow_back_white_24dp), contentDescription = "返回箭头")

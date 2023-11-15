@@ -1,12 +1,9 @@
 package com.hx.infusionchairplateproject.network;
 
 import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.hjq.toast.Toaster;
 import com.hx.infusionchairplateproject.BaseActivity;
 
 import java.io.IOException;
@@ -28,14 +25,14 @@ public class NetworkManager {
     /**
      * 数据请求服务器
      */
-    private final String RETROFIT_URL =  "http://shuyeyi.dev.hxyihu.com/server/";       // 正式服
-//    private final String RETROFIT_URL =  "http://shuyeyi-test.dev.hxyihu.com/server/";  // 测试服
+//    private final String RETROFIT_URL =  "http://shuyeyi.dev.hxyihu.com/server/";       // 正式服
+    private final String RETROFIT_URL =  "http://shuyeyi-test.dev.hxyihu.com/server/";  // 测试服
 
     /**
      * WebSocket 服务器
      */
-    public static final String WEBSOCKET_URL = "ws://shuyeyi.dev.hxyihu.com/message";    // 正式服
-//    public static final String WEBSOCKET_URL = "ws://shuyeyi-test.dev.hxyihu.com/message";    // 测试服
+//    public static final String WEBSOCKET_URL = "ws://shuyeyi.dev.hxyihu.com/message";    // 正式服
+    public static final String WEBSOCKET_URL = "ws://shuyeyi-test.dev.hxyihu.com/message";    // 测试服
 
     private NetworkManager() {
         if (retrofit == null) {
