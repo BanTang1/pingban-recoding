@@ -106,10 +106,16 @@ class AllAppActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        FloatingWindow.isTop = true
         val startRecordAppId = SPTool.getString("startRecordAppId")
         if (startRecordAppId != ""){
             allAppViewModel.endDeviceLog(startRecordAppId)
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        FloatingWindow.isTop = false
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

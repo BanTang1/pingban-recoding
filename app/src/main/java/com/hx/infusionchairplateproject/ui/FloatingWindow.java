@@ -58,7 +58,7 @@ public class FloatingWindow {
     ImageView imgV;
     AudioManager audio;
     MyVolumeReceiver mVolumeReceiver;
-    public static boolean isTop;   //TODO onResume  onPause
+    public static boolean isTop;
 
     public FloatingWindow(Context context){
         this.context = context;
@@ -252,7 +252,7 @@ public class FloatingWindow {
                     .setSidePattern(SidePattern.RIGHT)
                     .setLocation(getScreenWidth() - dip2px(45), dip2px(40))
                     .setAnimator(null)
-                    .setDragEnable(false)
+                    .setDragEnable(true)
                     .setMatchParent(false, false)
                     .setAnimator(new DefaultAnimator())
                     .setImmersionStatusBar(false)
