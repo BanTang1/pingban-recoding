@@ -46,7 +46,7 @@ import java.net.URI
 class EntiretyApplication : Application() {
 
     private val TAG = "liudehua_EntiretyApplication"
-    private var debug: Boolean = false
+    private var debug: Boolean = true
 
     companion object {
         lateinit var context: Context
@@ -56,6 +56,9 @@ class EntiretyApplication : Application() {
     private lateinit var socketViewModel: SocketViewModel
     private lateinit var client: WebSocketClient
     private var isConnected = false
+    private val MAX_UNRECEIVED_HEARTBEATS = 3 // 最大未收到心跳反馈次数
+    private var unreceivedHeartbeats = 0 // 连续未收到心跳反馈的次数
+
 
     private var ch34xManager: CH34xManager? = null
 
@@ -144,6 +147,13 @@ class EntiretyApplication : Application() {
             while (isActive) {
                 if (isConnected) {
                     client.send(getSocketHeartbeatMsg())
+                    unreceivedHeartbeats += 1
+                    if (unreceivedHeartbeats > MAX_UNRECEIVED_HEARTBEATS) {
+                        if (debug) Log.d(TAG, "startHeartbeat: 与服务器断开连接，请检查网络状态！")
+                        isConnected = false
+                        unreceivedHeartbeats = 0
+                        realReconnect()
+                    }
                     delay(10000L)
                 }
                 // disconnect ,sleep 2s. Wait for connection...
@@ -171,7 +181,7 @@ class EntiretyApplication : Application() {
              *  type: ""  //0.未投放  1.已投放 2.扫码成功 3.扫码失败 4.用户已拒绝本次扫码 5.锁屏解锁时间 6.扫码成功(锁屏页) 7.扫码失败(锁屏页）
              *              8.用户已拒绝本次扫码（锁屏页）9.撤机（设备是否撤机） 10.重启  11.锁屏软件升级 12. 三方应用升级   13.进入WIFI界面
              *              14. 退出WIFI界面   15. 打开充电线   16.关闭充电线    17.查看充电线状态(打开或者关闭)      18.删除三方app目录（实际效果=去服务器上下载和安装）
-             *              19. 删除指定app
+             *              19. 删除指定app     20. 心跳反馈
              * }
              */
             override fun onMessage(message: String?) {
@@ -345,6 +355,8 @@ class EntiretyApplication : Application() {
                             }
                         }
                     }
+
+                    20 -> {unreceivedHeartbeats = 0}
                 }
 
             }
