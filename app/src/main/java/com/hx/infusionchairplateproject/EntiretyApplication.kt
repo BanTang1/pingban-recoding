@@ -94,8 +94,8 @@ class EntiretyApplication : Application() {
     private fun serverNetworkDetection() {
         CoroutineScope(Dispatchers.IO).launch {
             while (isActive) {
+                delay(5000L)
                 if (!isConnected){
-                    delay(5000L)
                     if (GeneralUtil.isActivityTop(this@EntiretyApplication,WifiSettingActivity::class.java)){
                         continue
                     }

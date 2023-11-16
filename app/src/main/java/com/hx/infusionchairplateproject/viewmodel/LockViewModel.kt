@@ -140,11 +140,11 @@ class LockViewModel : ViewModel() {
                     val feePackagesDataBeen:  ScreenInfo.DataDataBeen.FeePackagesDataBeen = feePackages[i]
                     if ("TABLET" != feePackagesDataBeen.type) {
                        if (debug) Log.d(TAG, "onResponse: feePackages 的 type字段 不为 TABLET")
-                        return
+                        continue
                     }
                     if (feePackagesDataBeen.rules.isEmpty()) {
                         if (debug) Log.d(TAG, "onResponse: feePackages 的 rules字段 为空")
-                        return
+                        continue
                     }
                     for (j in 0 until feePackagesDataBeen.rules.size) {
                         val feeStr = feePackagesDataBeen.rules[j].feeStr
