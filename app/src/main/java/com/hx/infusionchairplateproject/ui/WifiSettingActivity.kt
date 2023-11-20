@@ -8,7 +8,9 @@ import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.wifi.ScanResult
+import android.net.wifi.SupplicantState
 import android.net.wifi.WifiConfiguration
+import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.os.Handler
@@ -60,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import com.hx.infusionchairplateproject.BaseActivity
 import com.hx.infusionchairplateproject.R
 import com.hx.infusionchairplateproject.tools.GeneralUtil
+import com.hx.infusionchairplateproject.tools.SPTool
 
 
 /**
@@ -84,6 +87,9 @@ class WifiSettingActivity : BaseActivity() {
 
     // Wifi 连接状态
     var wifiConnectState = mutableStateOf("")
+
+    // 当前已连接的Wifi SSID
+    var connectedWifiSSID = mutableStateOf("")
 
     // 接收扫描结果  监听Wifi开关状态
     val wifiScanReceiver = object : BroadcastReceiver() {
@@ -146,7 +152,10 @@ class WifiSettingActivity : BaseActivity() {
                     val info = intent.getParcelableExtra<NetworkInfo>(WifiManager.EXTRA_NETWORK_INFO) ?: return
                     when(info.state) {
                         NetworkInfo.State.DISCONNECTED -> {wifiConnectState.value = "连接已断开"}
-                        NetworkInfo.State.CONNECTED -> {wifiConnectState.value = "已连接到网络：${connectedWifiInfo.ssid}"}
+                        NetworkInfo.State.CONNECTED -> {
+                            wifiConnectState.value = "已连接到网络：${connectedWifiInfo.ssid}"
+                            connectedWifiSSID.value = connectedWifiInfo.ssid
+                        }
                         else -> {
                             val state = info.detailedState
                             if (state == NetworkInfo.DetailedState.CONNECTING) {
@@ -177,8 +186,29 @@ class WifiSettingActivity : BaseActivity() {
                 finish()
                 return
             }
+            // 如果系统未自动连接Wifi，本地尝试连接最近一次连接过的Wifi
+            val lastWifiSSID: String = SPTool.getString("lastWifiSSID")
+            val wifiConfig = findWifiConfigurationBySSID(lastWifiSSID)
+            if (wifiConfig != null) {
+                wifiManager.enableNetwork(wifiConfig.networkId, true)
+            }
             mHandler.postDelayed(this, 3000)
         }
+    }
+
+    /**
+     * 在已保存的Wifi列表中找到指定的配置
+     * @param ssid      名称， 传入的时候需加上 “” , 如 "xxxxxx"
+     * @return          WifiConfiguration
+     */
+    @SuppressLint("MissingPermission")
+    private fun findWifiConfigurationBySSID(ssid: String): WifiConfiguration? {
+        for (config in wifiManager.configuredNetworks) {
+            if (config.SSID == ssid) {
+                return config
+            }
+        }
+        return null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -286,7 +316,7 @@ class WifiSettingActivity : BaseActivity() {
                 AlertDialog(
                     onDismissRequest = {
                         showDialog = false
-                        wifiManager.scanResults
+                        wifiManager.startScan()
                     },
                     title = { Text(ssid) },
                     confirmButton = {
@@ -303,6 +333,7 @@ class WifiSettingActivity : BaseActivity() {
                                     wifiManager.disconnect()
                                     wifiManager.enableNetwork(networkConfig.networkId, true)
                                     wifiManager.reconnect()
+                                    SPTool.putString("lastWifiSSID",networkConfig.SSID)
                                 }
                             }
                         }) {
@@ -332,7 +363,7 @@ class WifiSettingActivity : BaseActivity() {
                 AlertDialog(
                     onDismissRequest = {
                         showDialog = false
-                        wifiManager.scanResults
+                        wifiManager.startScan()
                     },
                     title = { Text(ssid) },
                     text = {
@@ -363,6 +394,7 @@ class WifiSettingActivity : BaseActivity() {
                             wifiManager.enableNetwork(netId, true)
                             wifiManager.reconnect()
                             isWifiSaved = true
+                            SPTool.putString("lastWifiSSID",wifiConfig.SSID)
                         }) {
                             Text("连接")
                         }
@@ -407,16 +439,20 @@ class WifiSettingActivity : BaseActivity() {
         ) {
             Row {
 
-                val isConnected: Boolean
+                val isConnecting: Boolean
                 val connectionInfo = wifiManager.connectionInfo
-                isConnected = connectionInfo != null && connectionInfo.ssid == "\"${scanResult.SSID}\""
+                isConnecting = connectionInfo != null && connectionInfo.ssid == "\"${scanResult.SSID}\""
 
                 val isSaved = savedWifiList.any { it.SSID.trim('\"') == scanResult.SSID }
                 var textState = "(未连接)"
                 if (isSaved) {
                     textState = "(已保存)"
                 }
-                if (isConnected) {
+                if (isConnecting) {
+                    textState = "(正在连接)"
+                }
+                Log.i("zh___", "WifiNetworkRow: ${connectedWifiSSID.value}     ${scanResult.SSID}")
+                if (connectedWifiSSID.value.trim('\"') == scanResult.SSID) {
                     textState = "(已连接)"
                 }
 
@@ -437,8 +473,8 @@ class WifiSettingActivity : BaseActivity() {
                 Text(
                     text = scanResult.SSID,
                     fontSize = 15.sp,
-                    color = if (isConnected) Color.Blue else Color.Unspecified,
-                    fontWeight = if (isConnected) FontWeight.Bold else null,
+                    color = if (isConnecting) Color.Blue else Color.Unspecified,
+                    fontWeight = if (isConnecting) FontWeight.Bold else null,
                     modifier = Modifier
                         .align(Alignment.CenterVertically)
                         .padding(16.dp)
@@ -446,8 +482,8 @@ class WifiSettingActivity : BaseActivity() {
                 Text(
                     text = textState,
                     fontSize = 15.sp,
-                    color = if (isConnected) Color.Blue else Color.Unspecified,
-                    fontWeight = if (isConnected) FontWeight.Bold else null,
+                    color = if (isConnecting) Color.Blue else Color.Unspecified,
+                    fontWeight = if (isConnecting) FontWeight.Bold else null,
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Spacer(modifier = Modifier.weight(1f))
