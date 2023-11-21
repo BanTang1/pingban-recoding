@@ -453,7 +453,8 @@ class EntiretyApplication : Application() {
             "type":"HEARTBEAT",
             "data":{
                 "deviceId":"$snAddress",
-                "signal":$level
+                "signal":$level,
+                "chargingCable":${ch34xManager?.isUSBConnect}
             }
         }"""
         if (debug) Log.d(TAG, "socket heartbeat,send -> $jsonString")
