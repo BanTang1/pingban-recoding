@@ -146,6 +146,7 @@ class EntiretyApplication : Application() {
         CoroutineScope(Dispatchers.IO).launch {
             while (isActive) {
                 if (isConnected) {
+                    delay(10000L)
                     client.send(getSocketHeartbeatMsg())
                     unreceivedHeartbeats += 1
                     if (unreceivedHeartbeats > MAX_UNRECEIVED_HEARTBEATS) {
@@ -154,7 +155,6 @@ class EntiretyApplication : Application() {
                         unreceivedHeartbeats = 0
                         realReconnect()
                     }
-                    delay(10000L)
                 }
                 // disconnect ,sleep 2s. Wait for connection...
                 delay(2000L)
@@ -439,7 +439,8 @@ class EntiretyApplication : Application() {
               "data":{
                     "deviceId":"$snAddress",
                     "versionCode":"$versionCode",
-                    "versionName":"$versionName"
+                    "versionName":"$versionName",
+                    "chargingCable":${ch34xManager?.isUSBConnect}
               }
             }"""
         if (debug) Log.d(TAG, "first connect,send -> $jsonString")
