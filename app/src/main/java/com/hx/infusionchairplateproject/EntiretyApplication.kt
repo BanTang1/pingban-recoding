@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.net.wifi.WifiManager
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
@@ -17,6 +18,7 @@ import com.hjq.toast.Toaster
 import com.hjq.toast.style.CustomToastStyle
 import com.hx.infusionchairplateproject.ch340.CH34xManager
 import com.hx.infusionchairplateproject.databeen.AndroidVersion
+import com.hx.infusionchairplateproject.databeen.BaseBean
 import com.hx.infusionchairplateproject.network.DownloadMgr
 import com.hx.infusionchairplateproject.network.NetworkManager
 import com.hx.infusionchairplateproject.tools.CommandTool
@@ -95,8 +97,8 @@ class EntiretyApplication : Application() {
         CoroutineScope(Dispatchers.IO).launch {
             while (isActive) {
                 delay(5000L)
-                if (!isConnected){
-                    if (GeneralUtil.isActivityTop(this@EntiretyApplication,WifiSettingActivity::class.java)){
+                if (!isConnected) {
+                    if (GeneralUtil.isActivityTop(this@EntiretyApplication, WifiSettingActivity::class.java)) {
                         continue
                     }
                     val params = ToastParams()
@@ -146,7 +148,8 @@ class EntiretyApplication : Application() {
         CoroutineScope(Dispatchers.IO).launch {
             while (isActive) {
                 if (isConnected) {
-                    delay(10000L)
+                    delay(8000L)
+                    if (!isConnected) continue
                     client.send(getSocketHeartbeatMsg())
                     unreceivedHeartbeats += 1
                     if (unreceivedHeartbeats > MAX_UNRECEIVED_HEARTBEATS) {
@@ -174,6 +177,7 @@ class EntiretyApplication : Application() {
                 GeneralUtil.writeToFile("WebSocket is connected")
                 send(getSocketFirstConnectMsg())
 
+                sendServerSSID()
             }
 
             /**
@@ -286,8 +290,8 @@ class EntiretyApplication : Application() {
                     }
 
                     13 -> {
-                        if (!GeneralUtil.isActivityTop(this@EntiretyApplication,WifiSettingActivity::class.java)){
-                            val intent = Intent(this@EntiretyApplication,WifiSettingActivity::class.java)
+                        if (!GeneralUtil.isActivityTop(this@EntiretyApplication, WifiSettingActivity::class.java)) {
+                            val intent = Intent(this@EntiretyApplication, WifiSettingActivity::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             intent.putExtra("status", true)
                             startActivity(intent)
@@ -296,7 +300,7 @@ class EntiretyApplication : Application() {
                     }
 
                     14 -> {
-                        if (GeneralUtil.isActivityTop(this@EntiretyApplication,WifiSettingActivity::class.java)){
+                        if (GeneralUtil.isActivityTop(this@EntiretyApplication, WifiSettingActivity::class.java)) {
                             ActivityTask.finishOneActivity(WifiSettingActivity::class.java.name)
                             send(getOnMessageWriteBack("QUIT_WIFI"))
                         }
@@ -356,7 +360,9 @@ class EntiretyApplication : Application() {
                         }
                     }
 
-                    20 -> {unreceivedHeartbeats = 0}
+                    20 -> {
+                        unreceivedHeartbeats = 0
+                    }
                 }
 
             }
@@ -378,6 +384,9 @@ class EntiretyApplication : Application() {
     }
 
 
+    /**
+     * 锁屏后的额外处理操作
+     */
     private fun handleLockExtra() {
         CoroutineScope(Dispatchers.IO).launch {
             // tell to server ,lock screen
@@ -580,8 +589,8 @@ class EntiretyApplication : Application() {
     /**
      * 锁屏软件更新
      */
-    private fun downLoadLockApp(url:String) {
-        DownloadMgr.getInstance().addTask(url,"/sdcard/hxAndroidV/${url.substringAfterLast("/")}",object :DownloadMgr.Callback(){
+    private fun downLoadLockApp(url: String) {
+        DownloadMgr.getInstance().addTask(url, "/sdcard/hxAndroidV/${url.substringAfterLast("/")}", object : DownloadMgr.Callback() {
             override fun onSuccess(url: String, l: Long) {
                 CommandTool.execSuCMD("pm install -r /sdcard/hxAndroidV/${url.substringAfterLast("/")}")
             }
@@ -591,13 +600,13 @@ class EntiretyApplication : Application() {
     /**
      * CH340状态反馈
      */
-    private fun ch340StateFeedback(type:String) {
+    private fun ch340StateFeedback(type: String) {
         CoroutineScope(Dispatchers.Main).launch {
             delay(1000L)
             val result = ch34xManager!!.checkResult()
-            when(type) {
+            when (type) {
                 "open" -> {
-                    if (result.equals("open")){
+                    if (result.equals("open")) {
                         client.send(getOnMessageWriteBack("CHARGE_OPEN"))
                     } else {
                         client.send(getOnMessageWriteBack("CHARGE_ERROR"))
@@ -605,7 +614,7 @@ class EntiretyApplication : Application() {
                 }
 
                 "close" -> {
-                    if (result.equals("close")){
+                    if (result.equals("close")) {
                         client.send(getOnMessageWriteBack("CHARGE_CLOSE"))
                     } else {
                         client.send(getOnMessageWriteBack("CHARGE_ERROR"))
@@ -613,9 +622,9 @@ class EntiretyApplication : Application() {
                 }
 
                 "state" -> {
-                    if (result.equals("state is open")){
+                    if (result.equals("state is open")) {
                         client.send(getOnMessageWriteBack("CHARGE_STATE_OPEN"))
-                    } else if (result.equals("state is close")){
+                    } else if (result.equals("state is close")) {
                         client.send(getOnMessageWriteBack("CHARGE_STATE_CLOSE"))
                     } else {
                         client.send(getOnMessageWriteBack("CHARGE_STATE_UNKNOW"))
@@ -624,6 +633,25 @@ class EntiretyApplication : Application() {
 
             }
         }
+    }
+
+    /**
+     * 发送SSID给后台
+     * 实际功能未知，原项目中有，因此保留
+     */
+    private fun sendServerSSID() {
+        val wifiManager = getSystemService(Context.WIFI_SERVICE) as WifiManager
+        val connectionInfo = wifiManager.connectionInfo
+        val connectedSSID = connectionInfo.ssid
+        NetworkManager.getInstance().requestApi.wireless(snAddress, connectedSSID).enqueue(object : Callback<BaseBean<String>> {
+            override fun onResponse(call: Call<BaseBean<String>>, response: Response<BaseBean<String>>) {
+            }
+
+            override fun onFailure(call: Call<BaseBean<String>>, t: Throwable) {
+
+            }
+
+        })
     }
 
 }

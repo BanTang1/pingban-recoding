@@ -5,16 +5,14 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.wifi.ScanResult
-import android.net.wifi.SupplicantState
 import android.net.wifi.WifiConfiguration
-import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
@@ -61,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hx.infusionchairplateproject.BaseActivity
 import com.hx.infusionchairplateproject.R
+import com.hx.infusionchairplateproject.tools.CommandTool
 import com.hx.infusionchairplateproject.tools.GeneralUtil
 import com.hx.infusionchairplateproject.tools.SPTool
 
@@ -68,13 +67,13 @@ import com.hx.infusionchairplateproject.tools.SPTool
 /**
  * WIFI 设置界面
  */
+@Suppress("DEPRECATED_IDENTITY_EQUALS")
 class WifiSettingActivity : BaseActivity() {
 
     private val TAG = "liudehua_WifiSettingActivity"
     private var debug: Boolean = false
 
     private lateinit var wifiManager: WifiManager
-    private lateinit var connectivityManager: ConnectivityManager
 
     // Wifi列表
     var wifiList = mutableStateListOf<ScanResult>()
@@ -215,7 +214,6 @@ class WifiSettingActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         wifiManager = getSystemService(Context.WIFI_SERVICE) as WifiManager
-        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         wifiSwitchState.value = wifiManager.isWifiEnabled
 
         val intent = intent
@@ -278,6 +276,12 @@ class WifiSettingActivity : BaseActivity() {
                 Text(text = "网络设置（WiFi）", fontSize = 24.sp, modifier = Modifier.align(Alignment.CenterVertically))
                 Switch(checked = wifiSwitchState.value,
                     onCheckedChange = {
+                        // 检查当前飞行模式的状态
+                        val isAirplaneModeOn = Settings.Global.getInt(contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) == 1
+                        if (isAirplaneModeOn) {
+                            CommandTool.execSuCMD("settings put global airplane_mode_on 0")
+                            CommandTool.execSuCMD("am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false")
+                        }
                         wifiManager.isWifiEnabled = !wifiSwitchState.value
                         wifiSwitchState.value = it
                     }
@@ -451,7 +455,6 @@ class WifiSettingActivity : BaseActivity() {
                 if (isConnecting) {
                     textState = "(正在连接)"
                 }
-                Log.i("zh___", "WifiNetworkRow: ${connectedWifiSSID.value}     ${scanResult.SSID}")
                 if (connectedWifiSSID.value.trim('\"') == scanResult.SSID) {
                     textState = "(已连接)"
                 }

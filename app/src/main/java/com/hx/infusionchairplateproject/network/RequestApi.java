@@ -64,5 +64,10 @@ public interface RequestApi {
     @POST("pad/" + "lock/screen/{sn}")
     Call<String> lockScreen(@Path("sn") String sn);
 
+    /**
+     * Wifi更名， 原项目中有，暂不知道有什么意义，保留
+     */
+    @POST("pad/" + "update/wireless/{sn}/{wifiName}")
+    Call<BaseBean<String>> wireless(@Path("sn") String sn,@Path("wifiName") String wifiName);
 
 }
