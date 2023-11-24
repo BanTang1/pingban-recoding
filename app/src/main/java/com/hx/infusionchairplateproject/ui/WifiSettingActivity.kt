@@ -276,7 +276,6 @@ class WifiSettingActivity : BaseActivity() {
                 Text(text = "网络设置（WiFi）", fontSize = 24.sp, modifier = Modifier.align(Alignment.CenterVertically))
                 Switch(checked = wifiSwitchState.value,
                     onCheckedChange = {
-                        // 检查当前飞行模式的状态
                         val isAirplaneModeOn = Settings.Global.getInt(contentResolver, Settings.Global.AIRPLANE_MODE_ON, 0) == 1
                         if (isAirplaneModeOn) {
                             CommandTool.execSuCMD("settings put global airplane_mode_on 0")
